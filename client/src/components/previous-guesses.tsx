@@ -52,6 +52,8 @@ interface GuessCardProps {
 }
 
 function GuessCard({ guess, targetArtist, isLatest = false }: GuessCardProps) {
+  // Add a reference to animate only this card when it's the latest
+  const animationClass = isLatest ? 'animate-match' : '';
   // Can't do comparisons without target artist
   if (!targetArtist) {
     return (
@@ -185,7 +187,7 @@ function GuessCard({ guess, targetArtist, isLatest = false }: GuessCardProps) {
         {/* Debut */}
         <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${
           guessYear === targetYear 
-            ? (isLatest ? 'correct' : 'bg-green-800 bg-opacity-50') 
+            ? (isLatest ? `correct ${animationClass}` : 'bg-green-800 bg-opacity-50') 
             : 'bg-gray-800'
         }`}>
           <span style={labelStyle}>Debut</span>
@@ -198,7 +200,7 @@ function GuessCard({ guess, targetArtist, isLatest = false }: GuessCardProps) {
         {/* Members */}
         <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${
           guess.members === targetArtist.members 
-            ? (isLatest ? 'correct' : 'bg-green-800 bg-opacity-50') 
+            ? (isLatest ? `correct ${animationClass}` : 'bg-green-800 bg-opacity-50') 
             : 'bg-gray-800'
         }`}>
           <span style={labelStyle}>Members</span>
@@ -210,7 +212,7 @@ function GuessCard({ guess, targetArtist, isLatest = false }: GuessCardProps) {
         {/* Popularity */}
         <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${
           guessPopularity === targetPopularity 
-            ? (isLatest ? 'correct' : 'bg-green-800 bg-opacity-50') 
+            ? (isLatest ? `correct ${animationClass}` : 'bg-green-800 bg-opacity-50') 
             : 'bg-gray-800'
         }`}>
           <span style={labelStyle}>Popularity</span>
@@ -223,7 +225,7 @@ function GuessCard({ guess, targetArtist, isLatest = false }: GuessCardProps) {
         {/* Gender */}
         <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${
           genderMatch 
-            ? (isLatest ? 'correct' : 'bg-green-800 bg-opacity-50') 
+            ? (isLatest ? `correct ${animationClass}` : 'bg-green-800 bg-opacity-50') 
             : 'bg-gray-800'
         }`}>
           <span style={labelStyle}>Gender</span>
@@ -233,7 +235,7 @@ function GuessCard({ guess, targetArtist, isLatest = false }: GuessCardProps) {
         {/* Genre */}
         <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${
           guess.genres?.[0] === targetArtist.genres?.[0] 
-            ? (isLatest ? 'correct' : 'bg-green-800 bg-opacity-50') 
+            ? (isLatest ? `correct ${animationClass}` : 'bg-green-800 bg-opacity-50') 
             : 'bg-gray-800'
         }`}>
           <span style={labelStyle}>Genre</span>
@@ -243,7 +245,7 @@ function GuessCard({ guess, targetArtist, isLatest = false }: GuessCardProps) {
         {/* Country */}
         <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${
           countryMatch 
-            ? (isLatest ? 'correct' : 'bg-green-800 bg-opacity-50') 
+            ? (isLatest ? `correct ${animationClass}` : 'bg-green-800 bg-opacity-50') 
             : 'bg-gray-800'
         }`}>
           <span style={labelStyle}>Country</span>
@@ -296,6 +298,9 @@ function SimpleGuessCard({ guess }: { guess: ArtistWithDetails }) {
   };
   
   const countryFlag = country && countryFlags[country] ? countryFlags[country] : '';
+  
+  // Common style for labels
+  const labelStyle = { fontSize: '15.2px', fontWeight: 500, color: 'rgb(156, 163, 175)' };
 
   return (
     <>
@@ -315,37 +320,37 @@ function SimpleGuessCard({ guess }: { guess: ArtistWithDetails }) {
       <div className="grid grid-cols-3 gap-2 p-2">
         {/* Debut */}
         <div className="bg-gray-800 rounded-lg p-2 flex flex-col items-center">
-          <span className="text-gray-400" style={{ fontSize: '15.2px', fontWeight: 500 }}>Debut</span>
+          <span style={labelStyle}>Debut</span>
           <span className="text-white text-lg font-semibold">{debut}</span>
         </div>
 
         {/* Members */}
         <div className="bg-gray-800 rounded-lg p-2 flex flex-col items-center">
-          <span className="text-gray-400" style={{ fontSize: '15.2px', fontWeight: 500 }}>Members</span>
+          <span style={labelStyle}>Members</span>
           <span className="text-white text-lg font-semibold">{members}</span>
         </div>
 
         {/* Popularity */}
         <div className="bg-gray-800 rounded-lg p-2 flex flex-col items-center">
-          <span className="text-gray-400" style={{ fontSize: '15.2px', fontWeight: 500 }}>Popularity</span>
+          <span style={labelStyle}>Popularity</span>
           <span className="text-white text-lg font-semibold">{popularity}</span>
         </div>
 
         {/* Gender */}
         <div className="bg-gray-800 rounded-lg p-2 flex flex-col items-center">
-          <span className="text-gray-400" style={{ fontSize: '15.2px', fontWeight: 500 }}>Gender</span>
+          <span style={labelStyle}>Gender</span>
           <span className="text-white text-lg font-semibold">{gender}</span>
         </div>
 
         {/* Genre */}
         <div className="bg-gray-800 rounded-lg p-2 flex flex-col items-center">
-          <span className="text-gray-400" style={{ fontSize: '15.2px', fontWeight: 500 }}>Genre</span>
+          <span style={labelStyle}>Genre</span>
           <span className="text-white text-lg font-semibold">{genre}</span>
         </div>
 
         {/* Country */}
         <div className="bg-gray-800 rounded-lg p-2 flex flex-col items-center">
-          <span className="text-gray-400" style={{ fontSize: '15.2px', fontWeight: 500 }}>Country</span>
+          <span style={labelStyle}>Country</span>
           <div className="flex flex-col items-center">
             {countryFlag && (
               <span className="text-xl">{countryFlag}</span>

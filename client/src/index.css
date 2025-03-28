@@ -41,4 +41,9 @@
 
 .correct {
   animation: app-spot-guess-flip-correct 1.65s ease-in-out forwards;
+  animation-play-state: paused;
+}
+
+.animate-match {
+  animation-play-state: running !important;
 }
