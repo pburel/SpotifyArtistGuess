@@ -162,7 +162,7 @@ function GuessCard({ guess, targetArtist }: GuessCardProps) {
       <div className="grid grid-cols-3 gap-2 p-2">
         {/* Debut */}
         <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${guessYear === targetYear ? 'correct' : 'bg-gray-800'}`}>
-          <span className="text-gray-400 text-xs">Debut</span>
+          <span className="text-gray-400" style={{ fontSize: '15.2px', fontWeight: 500 }}>Debut</span>
           <div className="flex items-center">
             <span className="text-white text-lg font-semibold">{guess.debutYear || '—'}</span>
             {yearComparison}
@@ -171,7 +171,7 @@ function GuessCard({ guess, targetArtist }: GuessCardProps) {
 
         {/* Members */}
         <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${guess.members === targetArtist.members ? 'correct' : 'bg-gray-800'}`}>
-          <span className="text-gray-400 text-xs">Members</span>
+          <span className="text-gray-400" style={{ fontSize: '15.2px', fontWeight: 500 }}>Members</span>
           <span className="text-white text-lg font-semibold">
             {guess.members ? (guess.members > 1 ? guess.members.toString() : 'Solo') : 'Solo'}
           </span>
@@ -179,7 +179,7 @@ function GuessCard({ guess, targetArtist }: GuessCardProps) {
 
         {/* Popularity */}
         <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${guessPopularity === targetPopularity ? 'correct' : 'bg-gray-800'}`}>
-          <span className="text-gray-400 text-xs">Popularity</span>
+          <span className="text-gray-400" style={{ fontSize: '15.2px', fontWeight: 500 }}>Popularity</span>
           <div className="flex items-center">
             <span className="text-white text-lg font-semibold">{popularity}</span>
             {popularityComparison}
@@ -188,19 +188,19 @@ function GuessCard({ guess, targetArtist }: GuessCardProps) {
 
         {/* Gender */}
         <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${genderMatch ? 'correct' : 'bg-gray-800'}`}>
-          <span className="text-gray-300 text-xs">Gender</span>
+          <span className="text-gray-400" style={{ fontSize: '15.2px', fontWeight: 500 }}>Gender</span>
           <span className="text-white text-lg font-semibold">{gender}</span>
         </div>
 
         {/* Genre */}
         <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${guess.genres?.[0] === targetArtist.genres?.[0] ? 'correct' : 'bg-gray-800'}`}>
-          <span className="text-gray-400 text-xs">Genre</span>
+          <span className="text-gray-400" style={{ fontSize: '15.2px', fontWeight: 500 }}>Genre</span>
           <span className="text-white text-lg font-semibold">{genre}</span>
         </div>
 
         {/* Country */}
         <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${countryMatch ? 'correct' : 'bg-gray-800'}`}>
-          <span className="text-gray-400 text-xs">Country</span>
+          <span className="text-gray-400" style={{ fontSize: '15.2px', fontWeight: 500 }}>Country</span>
           <div className="flex flex-col items-center">
             {guessFlag && (
               <span className="text-xl">{guessFlag}</span>
@@ -269,37 +269,37 @@ function SimpleGuessCard({ guess }: { guess: ArtistWithDetails }) {
       <div className="grid grid-cols-3 gap-2 p-2">
         {/* Debut */}
         <div className="bg-gray-800 rounded-lg p-2 flex flex-col items-center">
-          <span className="text-gray-400 text-xs">Debut</span>
+          <span className="text-gray-400" style={{ fontSize: '15.2px', fontWeight: 500 }}>Debut</span>
           <span className="text-white text-lg font-semibold">{debut}</span>
         </div>
 
         {/* Members */}
         <div className="bg-gray-800 rounded-lg p-2 flex flex-col items-center">
-          <span className="text-gray-400 text-xs">Members</span>
+          <span className="text-gray-400" style={{ fontSize: '15.2px', fontWeight: 500 }}>Members</span>
           <span className="text-white text-lg font-semibold">{members}</span>
         </div>
 
         {/* Popularity */}
         <div className="bg-gray-800 rounded-lg p-2 flex flex-col items-center">
-          <span className="text-gray-400 text-xs">Popularity</span>
+          <span className="text-gray-400" style={{ fontSize: '15.2px', fontWeight: 500 }}>Popularity</span>
           <span className="text-white text-lg font-semibold">{popularity}</span>
         </div>
 
         {/* Gender */}
         <div className="bg-gray-800 rounded-lg p-2 flex flex-col items-center">
-          <span className="text-gray-300 text-xs">Gender</span>
+          <span className="text-gray-400" style={{ fontSize: '15.2px', fontWeight: 500 }}>Gender</span>
           <span className="text-white text-lg font-semibold">{gender}</span>
         </div>
 
         {/* Genre */}
         <div className="bg-gray-800 rounded-lg p-2 flex flex-col items-center">
-          <span className="text-gray-400 text-xs">Genre</span>
+          <span className="text-gray-400" style={{ fontSize: '15.2px', fontWeight: 500 }}>Genre</span>
           <span className="text-white text-lg font-semibold">{genre}</span>
         </div>
 
         {/* Country */}
         <div className="bg-gray-800 rounded-lg p-2 flex flex-col items-center">
-          <span className="text-gray-400 text-xs">Country</span>
+          <span className="text-gray-400" style={{ fontSize: '15.2px', fontWeight: 500 }}>Country</span>
           <div className="flex flex-col items-center">
             {countryFlag && (
               <span className="text-xl">{countryFlag}</span>
