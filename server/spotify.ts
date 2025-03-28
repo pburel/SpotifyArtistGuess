@@ -44,7 +44,9 @@ async function getAccessToken(): Promise<string> {
     accessToken = data.access_token;
     tokenExpiration = now + (data.expires_in * 1000);
     
-    return accessToken;
+    // This assertion is safe because if data.access_token was undefined, 
+    // we would have thrown an error before reaching this point
+    return accessToken as string;
   } catch (error) {
     console.error('Error getting Spotify access token:', error);
     throw error;
@@ -88,7 +90,8 @@ export async function fetchTopArtists(limit: number = 50, offset: number = 0): P
     ];
     
     const uniqueArtists = new Map<string, SpotifyArtist>();
-    const artistsPerGenre = Math.ceil(limit / genres.length);
+    // Spotify API limit must be between 1-50
+    const artistsPerGenre = Math.min(50, Math.max(1, Math.ceil(limit / genres.length)));
     
     // Get artists from each genre
     for (const genre of genres) {
@@ -120,10 +123,12 @@ export async function fetchTopArtists(limit: number = 50, offset: number = 0): P
     // If we still don't have enough artists, try a broader search
     if (uniqueArtists.size < limit) {
       try {
+        // Ensure the limit is within Spotify's allowed range (1-50)
+        const remainingLimit = Math.min(50, Math.max(1, limit - uniqueArtists.size));
         const searchData = await spotifyApiRequest('/search', {
           q: 'year:2020-2024',
           type: 'artist',
-          limit: (limit - uniqueArtists.size).toString(),
+          limit: remainingLimit.toString(),
           offset: '0'
         });
         
@@ -167,13 +172,16 @@ export function convertToAppArtist(spotifyArtist: SpotifyArtist): InsertArtist {
 export async function searchSpotifyArtists(query: string, limit: number = 10): Promise<SpotifyArtist[]> {
   if (!query) return [];
   
+  // Ensure the limit is within Spotify's allowed range (1-50)
+  const validLimit = Math.min(50, Math.max(1, limit));
+  
   const data = await spotifyApiRequest('/search', {
     q: query,
     type: 'artist',
-    limit: limit.toString()
+    limit: validLimit.toString()
   });
   
-  return data.artists.items;
+  return data.artists?.items || [];
 }
 
 /**

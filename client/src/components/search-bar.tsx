@@ -63,6 +63,11 @@ export default function SearchBar({ onGuess, disabled = false }: SearchBarProps)
     setSelectedArtist(artist);
     setQuery(artist.name);
     setShowResults(false);
+    
+    // Automatically submit the guess when an artist is selected
+    onGuess(artist);
+    setQuery("");
+    setSelectedArtist(null);
   };
 
   // Submit the guess
