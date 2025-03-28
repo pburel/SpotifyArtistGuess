@@ -2,17 +2,16 @@
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { User, LogOut } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function ProfileButton() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const handleLogin = () => {
-    // Spotify OAuth URL - we'll need to set up the server endpoint for this
     window.location.href = '/api/auth/spotify';
   };
 
   const handleLogout = () => {
-    // TODO: Implement logout
     setIsLoggedIn(false);
   };
 
@@ -20,17 +19,22 @@ export default function ProfileButton() {
     <div className="relative">
       <Button
         variant="ghost"
-        className="flex items-center gap-2 text-white hover:bg-white/10"
+        className="flex items-center gap-3 text-white hover:bg-white/10 rounded-full px-4 py-2"
         onClick={isLoggedIn ? handleLogout : handleLogin}
       >
-        <User className="h-5 w-5" />
+        <Avatar className="h-8 w-8">
+          <AvatarImage src={isLoggedIn ? "/user-avatar.jpg" : ""} />
+          <AvatarFallback>
+            <User className="h-4 w-4" />
+          </AvatarFallback>
+        </Avatar>
         {isLoggedIn ? (
-          <>
-            <span>Profile</span>
+          <div className="flex items-center gap-2">
+            <span className="font-medium">Profile</span>
             <LogOut className="h-4 w-4" />
-          </>
+          </div>
         ) : (
-          <span>Connect with Spotify</span>
+          <span className="font-medium">Connect with Spotify</span>
         )}
       </Button>
     </div>
