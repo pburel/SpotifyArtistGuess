@@ -1,6 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { spotifyAuth, spotifyCallback } from "./auth";
 import { fetchTopArtists, convertToAppArtist, searchSpotifyArtists, toArtistWithDetails } from "./spotify";
 import { z } from "zod";
 import { insertGameHistorySchema } from "@shared/schema";
@@ -591,6 +592,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ success: false, error: error.message });
     }
   });
+
+  // Spotify auth routes
+  app.get('/api/auth/spotify', spotifyAuth);
+  app.get('/api/auth/callback', spotifyCallback);
 
   const httpServer = createServer(app);
   return httpServer;
