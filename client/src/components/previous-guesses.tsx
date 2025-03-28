@@ -32,12 +32,12 @@ export default function PreviousGuesses({ guesses, targetArtist }: PreviousGuess
   return (
     <div className="max-w-2xl mx-auto mb-8">
       <h2 className="text-xl font-bold text-white mb-4">Previous Guesses</h2>
-      {[...guesses].reverse().map((guess, index) => (
+      {guesses.map((guess, index) => (
         <div key={`${guess.id}-${index}`} className="mb-6">
           <GuessCard 
             guess={guess} 
             targetArtist={targetArtist} 
-            isLatest={index === 0}
+            isLatest={index === latestGuessIndex}
           />
         </div>
       ))}
