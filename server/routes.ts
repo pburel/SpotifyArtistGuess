@@ -103,7 +103,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (localResults.length > 0) {
         // For search results, don't enrich with MusicBrainz data to avoid rate limiting
-        // Just convert to ArtistWithDetails format with basic info
+        // Instead use simplified values for the search display
         const artists = localResults.map(artist => ({
           id: artist.spotifyId,
           name: artist.name,
@@ -111,10 +111,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           genres: artist.genres || [],
           popularity: artist.popularity || 50,
           monthlyListeners: artist.monthlyListeners || 0,
-          // Leave optional UI fields undefined - they'll be fetched only when needed for the game
-          debutYear: undefined,
-          gender: undefined,
-          country: undefined,
+          // Provide basic placeholders for UI fields
+          debutYear: '',
+          gender: artist.name.includes(' Band') || artist.name.includes('Orchestra') ? 'Group' : '',
+          country: '',
           members: undefined
         }));
         
@@ -131,7 +131,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // For search results, don't enrich with MusicBrainz data
-      // Convert directly to simplified ArtistWithDetails format
+      // Convert directly to simplified ArtistWithDetails format with basic placeholders
       const artists = spotifyResults.map(artist => ({
         id: artist.id,
         name: artist.name,
@@ -139,10 +139,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         genres: artist.genres || [],
         popularity: artist.popularity || 50,
         monthlyListeners: artist.followers.total || 0,
-        // Leave optional UI fields undefined
-        debutYear: undefined,
-        gender: undefined,
-        country: undefined,
+        // Provide basic placeholders for UI fields
+        debutYear: '',
+        // Determine if likely a group based on name or genres
+        gender: artist.name.includes(' Band') || 
+                artist.name.includes('Orchestra') ||
+                artist.genres.some(g => g.includes('band') || g.includes('group')) ? 'Group' : '',
+        country: '',
         members: undefined
       }));
       
