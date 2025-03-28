@@ -48,38 +48,62 @@ interface ArtistDetailsProps {
 }
 
 export default function ArtistDetails({ artist, isGuess = false }: ArtistDetailsProps) {
-  // Set default values for missing data
-  const debut = artist.debutYear || '—';
-  const members = artist.members ? artist.members.toString() : 'Solo';
-  const popularity = artist.popularity ? `#${artist.popularity}` : '—';
+  // Set default values with better display handling
+  const debut = artist.debutYear ? artist.debutYear : '—';
   
-  // Determine gender display value
-  let gender = '';
-  if (artist.gender === 'Group') {
-    gender = 'Group';
-  } else if (artist.gender === 'Male' || artist.gender === 'male') {
-    gender = 'Male';
-  } else if (artist.gender === 'Female' || artist.gender === 'female') {
-    gender = 'Female';
-  } else if (artist.gender === 'Other' || artist.gender === 'other') {
-    gender = 'Other';
-  } else if (artist.name.includes(' Band') || artist.name.includes('Orchestra')) {
-    gender = 'Group';
-  } else {
-    // If we still can't determine, make an educated guess
-    const femaleNames = ['Lady', 'Queen', 'Girl', 'Beyoncé', 'Rihanna', 'Adele', 'Madonna', 'Dua Lipa'];
-    if (femaleNames.some(name => artist.name.includes(name))) {
+  // Handle members display - show actual number for groups, "Solo" for individuals
+  let members = 'Solo';
+  if (artist.members) {
+    if (artist.members > 1) {
+      members = artist.members.toString();
+    }
+  } else if (artist.gender === 'Group') {
+    members = '2+'; // Default for groups without specific member count
+  }
+  
+  // Format popularity as a rank (higher is better)
+  const popularity = artist.popularity 
+    ? `#${artist.popularity}` 
+    : '—';
+  
+  // Normalize gender display value with consistent capitalization
+  let gender = 'Unknown';
+  if (artist.gender) {
+    const normalizedGender = artist.gender.toLowerCase();
+    if (normalizedGender === 'group' || normalizedGender === 'band') {
+      gender = 'Group';
+    } else if (normalizedGender === 'male') {
+      gender = 'Male';
+    } else if (normalizedGender === 'female') {
       gender = 'Female';
-    } else {
-      gender = 'Unknown';
+    } else if (normalizedGender === 'other') {
+      gender = 'Other';
     }
   }
   
+  // Format genre with proper capitalization
   const genre = artist.genres && artist.genres.length > 0 
-    ? artist.genres[0].charAt(0).toUpperCase() + artist.genres[0].slice(1) 
-    : 'Unknown';
+    ? artist.genres[0]
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ')
+    : 'Pop'; // Default to Pop as a fallback
+  
+  // Get country code and flag
   const country = artist.country || '';
-  const countryFlag = country && countryFlags[country] ? countryFlags[country] : '';
+  const countryFlag = countryFlags[country] || '';
+  
+  // Map country codes to full country names for better display
+  const countryNames: Record<string, string> = {
+    'US': 'USA', 'UK': 'UK', 'CA': 'Canada', 'AU': 'Australia', 'SE': 'Sweden',
+    'KR': 'South Korea', 'JP': 'Japan', 'BR': 'Brazil', 'FR': 'France', 'DE': 'Germany',
+    'ES': 'Spain', 'IT': 'Italy', 'NL': 'Netherlands', 'NO': 'Norway', 'DK': 'Denmark',
+    'FI': 'Finland', 'IE': 'Ireland', 'NZ': 'New Zealand', 'MX': 'Mexico', 'AR': 'Argentina',
+    'CO': 'Colombia', 'CL': 'Chile', 'PE': 'Peru', 'PT': 'Portugal', 'IS': 'Iceland',
+    'IN': 'India', 'CN': 'China', 'RU': 'Russia', 'ZA': 'South Africa'
+  };
+  
+  const countryName = country && countryNames[country] ? countryNames[country] : country;
 
   return (
     <div className="flex flex-col items-center w-full max-w-md mx-auto">
@@ -136,7 +160,7 @@ export default function ArtistDetails({ artist, isGuess = false }: ArtistDetails
             {countryFlag && (
               <span className="text-2xl mb-1">{countryFlag}</span>
             )}
-            <span className="text-white text-lg font-semibold">{country || '—'}</span>
+            <span className="text-white text-lg font-semibold">{countryName || '—'}</span>
           </div>
         </div>
       </div>
