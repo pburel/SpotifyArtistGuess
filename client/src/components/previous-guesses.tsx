@@ -2,12 +2,29 @@ import { ArtistWithDetails, GameState } from "@shared/types";
 import { CheckCircle, XCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 
+// Custom CSS class for all card labels
+const labelStyle = {
+  fontSize: '15.2px',
+  fontWeight: 500,
+  color: 'white'
+};
+
 interface PreviousGuessesProps {
   guesses: ArtistWithDetails[];
   targetArtist?: ArtistWithDetails | null;
 }
 
 export default function PreviousGuesses({ guesses, targetArtist }: PreviousGuessesProps) {
+  // Track the latest guess index to only animate the newest one
+  const [latestGuessIndex, setLatestGuessIndex] = useState<number>(-1);
+  
+  useEffect(() => {
+    // When guesses change, set the latest index to the newest guess
+    if (guesses.length > 0) {
+      setLatestGuessIndex(guesses.length - 1);
+    }
+  }, [guesses.length]);
+
   if (guesses.length === 0) {
     return null;
   }
@@ -17,7 +34,11 @@ export default function PreviousGuesses({ guesses, targetArtist }: PreviousGuess
       <h2 className="text-xl font-bold text-white mb-4">Previous Guesses</h2>
       {guesses.map((guess, index) => (
         <div key={`${guess.id}-${index}`} className="mb-6">
-          <GuessCard guess={guess} targetArtist={targetArtist} />
+          <GuessCard 
+            guess={guess} 
+            targetArtist={targetArtist} 
+            isLatest={index === latestGuessIndex}
+          />
         </div>
       ))}
     </div>
@@ -27,9 +48,10 @@ export default function PreviousGuesses({ guesses, targetArtist }: PreviousGuess
 interface GuessCardProps {
   guess: ArtistWithDetails;
   targetArtist?: ArtistWithDetails | null;
+  isLatest?: boolean;
 }
 
-function GuessCard({ guess, targetArtist }: GuessCardProps) {
+function GuessCard({ guess, targetArtist, isLatest = false }: GuessCardProps) {
   // Can't do comparisons without target artist
   if (!targetArtist) {
     return (
@@ -161,8 +183,12 @@ function GuessCard({ guess, targetArtist }: GuessCardProps) {
       
       <div className="grid grid-cols-3 gap-2 p-2">
         {/* Debut */}
-        <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${guessYear === targetYear ? 'correct' : 'bg-gray-800'}`}>
-          <span className="text-gray-400" style={{ fontSize: '15.2px', fontWeight: 500 }}>Debut</span>
+        <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${
+          guessYear === targetYear 
+            ? (isLatest ? 'correct' : 'bg-green-800 bg-opacity-50') 
+            : 'bg-gray-800'
+        }`}>
+          <span style={labelStyle}>Debut</span>
           <div className="flex items-center">
             <span className="text-white text-lg font-semibold">{guess.debutYear || '—'}</span>
             {yearComparison}
@@ -170,16 +196,24 @@ function GuessCard({ guess, targetArtist }: GuessCardProps) {
         </div>
 
         {/* Members */}
-        <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${guess.members === targetArtist.members ? 'correct' : 'bg-gray-800'}`}>
-          <span className="text-gray-400" style={{ fontSize: '15.2px', fontWeight: 500 }}>Members</span>
+        <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${
+          guess.members === targetArtist.members 
+            ? (isLatest ? 'correct' : 'bg-green-800 bg-opacity-50') 
+            : 'bg-gray-800'
+        }`}>
+          <span style={labelStyle}>Members</span>
           <span className="text-white text-lg font-semibold">
             {guess.members ? (guess.members > 1 ? guess.members.toString() : 'Solo') : 'Solo'}
           </span>
         </div>
 
         {/* Popularity */}
-        <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${guessPopularity === targetPopularity ? 'correct' : 'bg-gray-800'}`}>
-          <span className="text-gray-400" style={{ fontSize: '15.2px', fontWeight: 500 }}>Popularity</span>
+        <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${
+          guessPopularity === targetPopularity 
+            ? (isLatest ? 'correct' : 'bg-green-800 bg-opacity-50') 
+            : 'bg-gray-800'
+        }`}>
+          <span style={labelStyle}>Popularity</span>
           <div className="flex items-center">
             <span className="text-white text-lg font-semibold">{popularity}</span>
             {popularityComparison}
@@ -187,20 +221,32 @@ function GuessCard({ guess, targetArtist }: GuessCardProps) {
         </div>
 
         {/* Gender */}
-        <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${genderMatch ? 'correct' : 'bg-gray-800'}`}>
-          <span className="text-gray-400" style={{ fontSize: '15.2px', fontWeight: 500 }}>Gender</span>
+        <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${
+          genderMatch 
+            ? (isLatest ? 'correct' : 'bg-green-800 bg-opacity-50') 
+            : 'bg-gray-800'
+        }`}>
+          <span style={labelStyle}>Gender</span>
           <span className="text-white text-lg font-semibold">{gender}</span>
         </div>
 
         {/* Genre */}
-        <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${guess.genres?.[0] === targetArtist.genres?.[0] ? 'correct' : 'bg-gray-800'}`}>
-          <span className="text-gray-400" style={{ fontSize: '15.2px', fontWeight: 500 }}>Genre</span>
+        <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${
+          guess.genres?.[0] === targetArtist.genres?.[0] 
+            ? (isLatest ? 'correct' : 'bg-green-800 bg-opacity-50') 
+            : 'bg-gray-800'
+        }`}>
+          <span style={labelStyle}>Genre</span>
           <span className="text-white text-lg font-semibold">{genre}</span>
         </div>
 
         {/* Country */}
-        <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${countryMatch ? 'correct' : 'bg-gray-800'}`}>
-          <span className="text-gray-400" style={{ fontSize: '15.2px', fontWeight: 500 }}>Country</span>
+        <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${
+          countryMatch 
+            ? (isLatest ? 'correct' : 'bg-green-800 bg-opacity-50') 
+            : 'bg-gray-800'
+        }`}>
+          <span style={labelStyle}>Country</span>
           <div className="flex flex-col items-center">
             {guessFlag && (
               <span className="text-xl">{guessFlag}</span>
