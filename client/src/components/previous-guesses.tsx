@@ -1,5 +1,5 @@
 import { ArtistWithDetails, GameState } from "@shared/types";
-import { CheckCircle, XCircle, ArrowUp, ArrowDown, ArrowRight } from "lucide-react";
+import { CheckCircle, XCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 
 interface PreviousGuessesProps {
@@ -46,11 +46,29 @@ function GuessCard({ guess, targetArtist }: GuessCardProps) {
   let yearComparison: JSX.Element | null = null;
   if (guessYear && targetYear) {
     if (guessYear < targetYear) {
-      yearComparison = <ArrowUp className="w-4 h-4 text-red-400 ml-1" />;
+      yearComparison = (
+        <div className="arrow-icon app-spot-guess">
+          <svg focusable="false" width="1.25rem" height="1.25rem" viewBox="0 0 24 24" fill="white">
+            <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"></path>
+          </svg>
+        </div>
+      );
     } else if (guessYear > targetYear) {
-      yearComparison = <ArrowDown className="w-4 h-4 text-red-400 ml-1" />;
+      yearComparison = (
+        <div className="arrow-icon app-spot-guess">
+          <svg focusable="false" width="1.25rem" height="1.25rem" viewBox="0 0 24 24" fill="white">
+            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"></path>
+          </svg>
+        </div>
+      );
     } else {
-      yearComparison = <ArrowRight className="w-4 h-4 text-green-400 ml-1" />;
+      yearComparison = (
+        <div className="arrow-icon app-spot-guess text-green-400">
+          <svg focusable="false" width="1.25rem" height="1.25rem" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path>
+          </svg>
+        </div>
+      );
     }
   }
   
@@ -60,11 +78,29 @@ function GuessCard({ guess, targetArtist }: GuessCardProps) {
   
   let popularityComparison: JSX.Element | null = null;
   if (guessPopularity < targetPopularity) {
-    popularityComparison = <ArrowUp className="w-4 h-4 text-red-400 ml-1" />;
+    popularityComparison = (
+      <div className="arrow-icon app-spot-guess">
+        <svg focusable="false" width="1.25rem" height="1.25rem" viewBox="0 0 24 24" fill="white">
+          <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"></path>
+        </svg>
+      </div>
+    );
   } else if (guessPopularity > targetPopularity) {
-    popularityComparison = <ArrowDown className="w-4 h-4 text-red-400 ml-1" />;
+    popularityComparison = (
+      <div className="arrow-icon app-spot-guess">
+        <svg focusable="false" width="1.25rem" height="1.25rem" viewBox="0 0 24 24" fill="white">
+          <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"></path>
+        </svg>
+      </div>
+    );
   } else {
-    popularityComparison = <ArrowRight className="w-4 h-4 text-green-400 ml-1" />;
+    popularityComparison = (
+      <div className="arrow-icon app-spot-guess text-green-400">
+        <svg focusable="false" width="1.25rem" height="1.25rem" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path>
+        </svg>
+      </div>
+    );
   }
   
   // Gender comparison - exact match only
