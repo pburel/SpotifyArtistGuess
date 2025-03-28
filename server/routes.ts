@@ -105,31 +105,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // For search results, don't enrich with MusicBrainz data to avoid rate limiting
         // Instead use simplified values with smart defaults for the search display
         const artists = localResults.map(artist => {
-          // Determine likely gender based on name and genres
+          // First check well-known artists with accurate gender information
+          const artistGenderMap: Record<string, string> = {
+            // Female artists
+            'Taylor Swift': 'Female',
+            'Beyoncé': 'Female',
+            'Madonna': 'Female',
+            'Lady Gaga': 'Female',
+            'Adele': 'Female',
+            'Rihanna': 'Female',
+            'Ariana Grande': 'Female',
+            'Katy Perry': 'Female',
+            'Whitney Houston': 'Female',
+            'Billie Eilish': 'Female',
+            'Dua Lipa': 'Female',
+            'Celine Dion': 'Female',
+            'Shakira': 'Female',
+            'Mariah Carey': 'Female',
+            'Amy Winehouse': 'Female',
+            'Ella Fitzgerald': 'Female',
+            'Björk': 'Female',
+            
+            // Male artists
+            'Bruce Springsteen': 'Male',
+            'Jay-Z': 'Male',
+            'Kanye West': 'Male',
+            'Drake': 'Male',
+            'The Weeknd': 'Male',
+            'Michael Jackson': 'Male',
+            'Elton John': 'Male',
+            'Bruno Mars': 'Male',
+            'Justin Bieber': 'Male',
+            'Ed Sheeran': 'Male',
+            'Elvis Presley': 'Male',
+            'Frank Sinatra': 'Male',
+            'David Bowie': 'Male',
+            'Bob Dylan': 'Male',
+            'Bob Marley': 'Male',
+            'John Lennon': 'Male',
+            'Paul McCartney': 'Male',
+            
+            // Groups
+            'The Beatles': 'Group',
+            'Queen': 'Group',
+            'The Rolling Stones': 'Group',
+            'Led Zeppelin': 'Group',
+            'Pink Floyd': 'Group',
+            'Coldplay': 'Group',
+            'BTS': 'Group',
+            'BLACKPINK': 'Group',
+            'TWICE': 'Group',
+            'Fleetwood Mac': 'Group',
+            'The Killers': 'Group',
+            'Linkin Park': 'Group',
+            'Metallica': 'Group',
+            'AC/DC': 'Group',
+            'ABBA': 'Group',
+            'Nirvana': 'Group',
+            'Green Day': 'Group',
+            'Backstreet Boys': 'Group',
+            'Destiny\'s Child': 'Group',
+            'One Direction': 'Group',
+            'The Supremes': 'Group'
+          };
+          
+          // Try to find the artist in our map first
           let gender = '';
-          if (artist.name.includes(' Band') || 
-              artist.name.includes('Orchestra') || 
-              artist.name.includes('Ensemble') ||
-              artist.name.includes('Choir') ||
-              artist.name.includes('Quintet') ||
-              artist.name.includes('Quartet')) {
-            gender = 'Group';
+          const exactMatch = artistGenderMap[artist.name];
+          if (exactMatch) {
+            gender = exactMatch;
           } else {
-            // Check for common female artist indicators
-            const femaleNames = ['Lady', 'Queen', 'Girl', 'Beyoncé', 'Rihanna', 'Adele', 'Madonna', 'Dua Lipa'];
-            if (femaleNames.some(name => artist.name.includes(name))) {
-              gender = 'Female';
+            // If no exact match, check if the name contains specific band/group indicators
+            if (artist.name.includes(' Band') || 
+                artist.name.includes('Orchestra') || 
+                artist.name.includes('Ensemble') ||
+                artist.name.includes('Choir') ||
+                artist.name.includes('Quintet') ||
+                artist.name.includes('Quartet') ||
+                artist.name.includes(' and the ') ||
+                artist.name.includes(' & The ')) {
+              gender = 'Group';
             } else {
-              // Try to make an educated guess based on genres
-              if (artist.genres && artist.genres.some(g => 
-                g.includes('girl') || g.includes('female') || g.includes('women'))) {
-                gender = 'Female';
-              } else if (artist.genres && artist.genres.some(g => 
-                g.includes('boy band') || g.includes('group') || g.includes('band'))) {
-                gender = 'Group';
+              // Check for partial matches in our map
+              const partialMatch = Object.keys(artistGenderMap).find(name => 
+                artist.name.includes(name) || name.includes(artist.name)
+              );
+              
+              if (partialMatch) {
+                gender = artistGenderMap[partialMatch];
               } else {
-                // Default to Male as it's statistically more common in music industry
-                gender = 'Male';
+                // Still no match, try to make an educated guess based on genres
+                if (artist.genres && artist.genres.some(g => 
+                  g.includes('girl') || g.includes('female') || g.includes('women'))) {
+                  gender = 'Female';
+                } else if (artist.genres && artist.genres.some(g => 
+                  g.includes('boy band') || g.includes('group') || g.includes('band'))) {
+                  gender = 'Group';
+                } else {
+                  // Default to Male as it's statistically more common in music industry
+                  gender = 'Male';
+                }
               }
             }
           }
@@ -149,10 +224,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
             debutYear = String(currentYear - 20);
           }
           
-          // Use common countries for music based on popularity
-          const popularCountries = ['US', 'UK', 'CA', 'AU', 'SE', 'KR', 'JP', 'BR', 'FR', 'DE'];
-          const countryIndex = Math.abs(artist.name.length % popularCountries.length);
-          const country = popularCountries[countryIndex];
+          // First check for well-known artists with known countries
+          const artistCountryMap: Record<string, string> = {
+            // US artists
+            'Bruce Springsteen': 'US',
+            'Taylor Swift': 'US',
+            'Beyoncé': 'US',
+            'Jay-Z': 'US',
+            'Kanye West': 'US',
+            'Lady Gaga': 'US',
+            'Whitney Houston': 'US',
+            'Madonna': 'US',
+            'Michael Jackson': 'US',
+            'Elvis Presley': 'US',
+            'Ariana Grande': 'US',
+            'Bruno Mars': 'US',
+            'Katy Perry': 'US',
+            'Billie Eilish': 'US',
+            'Post Malone': 'US',
+            'Frank Sinatra': 'US',
+            'Bob Dylan': 'US',
+            'Ella Fitzgerald': 'US',
+            
+            // UK artists
+            'The Beatles': 'UK',
+            'Adele': 'UK',
+            'Ed Sheeran': 'UK',
+            'Elton John': 'UK',
+            'Queen': 'UK',
+            'The Rolling Stones': 'UK',
+            'David Bowie': 'UK',
+            'Led Zeppelin': 'UK',
+            'Pink Floyd': 'UK',
+            'Coldplay': 'UK',
+            'Amy Winehouse': 'UK',
+            'Dua Lipa': 'UK',
+            
+            // Canadian artists
+            'Drake': 'CA',
+            'Justin Bieber': 'CA',
+            'The Weeknd': 'CA',
+            'Celine Dion': 'CA',
+            'Shawn Mendes': 'CA',
+            'Avril Lavigne': 'CA',
+            
+            // Korean artists
+            'BTS': 'KR',
+            'BLACKPINK': 'KR',
+            'TWICE': 'KR',
+            'Psy': 'KR',
+            
+            // Other countries
+            'ABBA': 'SE',
+            'Shakira': 'CO',
+            'Rihanna': 'BB',
+            'Bob Marley': 'JM',
+            'AC/DC': 'AU',
+            'Björk': 'IS'
+          };
+          
+          // Try to find the artist in our map first
+          let country = '';
+          const exactMatch = artistCountryMap[artist.name];
+          if (exactMatch) {
+            country = exactMatch;
+          } else {
+            // If no exact match, check for partial matches
+            const partialMatch = Object.keys(artistCountryMap).find(name => 
+              artist.name.includes(name) || name.includes(artist.name)
+            );
+            
+            if (partialMatch) {
+              country = artistCountryMap[partialMatch];
+            } else {
+              // Use a weighted distribution based on music industry
+              // US accounts for the largest share of popular music, followed by UK
+              const countryDistribution = [
+                'US', 'US', 'US', 'US', 'US', // 5/15 chance for US
+                'UK', 'UK', 'UK',             // 3/15 chance for UK  
+                'CA', 'CA',                   // 2/15 chance for Canada
+                'AU',                         // 1/15 for each of these
+                'SE', 
+                'KR', 
+                'JP',
+                'BR'
+              ];
+              
+              // Use a consistent selection based on artist name length
+              // For a more uniform distribution than just modulo
+              const hash = artist.name.split('').reduce((acc, char) => 
+                acc + char.charCodeAt(0), 0);
+              
+              country = countryDistribution[hash % countryDistribution.length];
+            }
+          }
           
           return {
             id: artist.spotifyId,
@@ -226,10 +391,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
           debutYear = String(currentYear - 20);
         }
         
-        // Use common countries for music based on popularity
-        const popularCountries = ['US', 'UK', 'CA', 'AU', 'SE', 'KR', 'JP', 'BR', 'FR', 'DE'];
-        const countryIndex = Math.abs(artist.name.length % popularCountries.length);
-        const country = popularCountries[countryIndex];
+        // First check for well-known artists with known countries
+        const artistCountryMap: Record<string, string> = {
+          // US artists
+          'Bruce Springsteen': 'US',
+          'Taylor Swift': 'US',
+          'Beyoncé': 'US',
+          'Jay-Z': 'US',
+          'Kanye West': 'US',
+          'Lady Gaga': 'US',
+          'Whitney Houston': 'US',
+          'Madonna': 'US',
+          'Michael Jackson': 'US',
+          'Elvis Presley': 'US',
+          'Ariana Grande': 'US',
+          'Bruno Mars': 'US',
+          'Katy Perry': 'US',
+          'Billie Eilish': 'US',
+          'Post Malone': 'US',
+          'Frank Sinatra': 'US',
+          'Bob Dylan': 'US',
+          'Ella Fitzgerald': 'US',
+          
+          // UK artists
+          'The Beatles': 'UK',
+          'Adele': 'UK',
+          'Ed Sheeran': 'UK',
+          'Elton John': 'UK',
+          'Queen': 'UK',
+          'The Rolling Stones': 'UK',
+          'David Bowie': 'UK',
+          'Led Zeppelin': 'UK',
+          'Pink Floyd': 'UK',
+          'Coldplay': 'UK',
+          'Amy Winehouse': 'UK',
+          'Dua Lipa': 'UK',
+          
+          // Canadian artists
+          'Drake': 'CA',
+          'Justin Bieber': 'CA',
+          'The Weeknd': 'CA',
+          'Celine Dion': 'CA',
+          'Shawn Mendes': 'CA',
+          'Avril Lavigne': 'CA',
+          
+          // Korean artists
+          'BTS': 'KR',
+          'BLACKPINK': 'KR',
+          'TWICE': 'KR',
+          'Psy': 'KR',
+          
+          // Other countries
+          'ABBA': 'SE',
+          'Shakira': 'CO',
+          'Rihanna': 'BB',
+          'Bob Marley': 'JM',
+          'AC/DC': 'AU',
+          'Björk': 'IS'
+        };
+        
+        // Try to find the artist in our map first
+        let country = '';
+        const exactMatch = artistCountryMap[artist.name];
+        if (exactMatch) {
+          country = exactMatch;
+        } else {
+          // If no exact match, check for partial matches
+          const partialMatch = Object.keys(artistCountryMap).find(name => 
+            artist.name.includes(name) || name.includes(artist.name)
+          );
+          
+          if (partialMatch) {
+            country = artistCountryMap[partialMatch];
+          } else {
+            // Use a weighted distribution based on music industry
+            // US accounts for the largest share of popular music, followed by UK
+            const countryDistribution = [
+              'US', 'US', 'US', 'US', 'US', // 5/15 chance for US
+              'UK', 'UK', 'UK',             // 3/15 chance for UK  
+              'CA', 'CA',                   // 2/15 chance for Canada
+              'AU',                         // 1/15 for each of these
+              'SE', 
+              'KR', 
+              'JP',
+              'BR'
+            ];
+            
+            // Use a consistent selection based on artist name length
+            // For a more uniform distribution than just modulo
+            const hash = artist.name.split('').reduce((acc, char) => 
+              acc + char.charCodeAt(0), 0);
+            
+            country = countryDistribution[hash % countryDistribution.length];
+          }
+        }
         
         return {
           id: artist.id,

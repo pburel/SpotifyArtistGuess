@@ -1,0 +1,121 @@
+// Artist endpoint
+app.get('/api/artist', async (req, res) => {
+    
+    await ensureValidToken();
+
+    try {
+        // 1. Validate input
+        const artistName = req.query.name;
+        if (!artistName) {
+            return res.status(400).json({
+                error: 'Missing artist name',
+                example: '/api/artist?name=adèle'
+            });
+        }
+
+        // 2. Ensure we have a valid Spotify token
+        if (!spotifyAccessToken) {
+            spotifyAccessToken = await getSpotifyToken();
+            if (!spotifyAccessToken) {
+                return res.status(503).json({
+                    error: 'Service unavailable',
+                    message: 'Failed to authenticate with Spotify'
+                });
+            }
+        }
+
+        // 3. Call Spotify API
+        const spotifyResponse = await axios.get(
+            `https://api.spotify.com/v1/search?q=${encodeURIComponent(artistName)}&type=artist&limit=1`,
+            {
+                headers: {
+                    'Authorization': `Bearer ${spotifyAccessToken}`
+                }
+            }
+        );
+                // 4. Handle no results
+        if (spotifyResponse.data.artists.items.length === 0) {
+            return res.status(404).json({
+                error: 'Artist not found',
+                searchedName: decodeURIComponent(artistName)
+            });
+        }
+
+        const musicBrainzResponse = await axios.get('https://musicbrainz.org/ws/2/artist/', {
+            params: {
+              query: artistName,
+              fmt: 'json',
+              limit: 1,
+            },
+            headers: {
+              'User-Agent': 'DevQuizApp/1.0 ( ton_email@example.com )'
+            }
+        });
+
+
+        // 4. Handle no results
+        if (musicBrainzResponse.data.artists.length === 0) {
+            return res.status(404).json({
+                error: 'Artist not found',
+                searchedName: decodeURIComponent(artistName)
+            });
+        }
+        
+        const musicBrainz = musicBrainzResponse.data.artists[0] ;
+        console.log(musicBrainz);
+
+        // 5. Process response
+        const artist = spotifyResponse.data.artists.items[0];
+        console.log(artist);
+
+        if (!artist) {
+            return res.status(404).json({ error: 'Artist not found' });
+        }
+        
+        // Get more details
+        const responseData = {
+            id: artist.id,
+            name: artist.name,
+            popularity: artist.popularity,
+            genres: artist.genres,
+            followers: artist.followers.total,
+            
+            debutYear:  musicBrainz.startYear || new Date().getFullYear() - (artist.genres.includes('contemporary') ? 5 : 10), // Simplified debut year
+            members: musicBrainz.type || (artist.name.includes('&') || artist.name.includes('and') ? 'Group' : 'Solo'),
+            gender: artist.name.endsWith('s') ? 'Male' : 'Female', // Simplified gender detection
+            country:musicBrainz.country , // Simplified - would need more complex logic for real implementation
+            image: artist.images[0]?.url,
+        };
+        
+
+        /*const responseData = {
+            name: artist.name,
+            id: artist.id,
+            popularity: artist.popularity,
+            genres: artist.genres,
+            followers: artist.followers.total,
+            image: artist.images[0]?.url,
+            uri: artist.uri
+        };*/
+
+        res.status(200).json(responseData);
+
+    } catch (error) {
+        console.error('Artist endpoint error:', error);
+        
+        // Handle Spotify API errors
+        if (error.response?.status === 401) {
+            // Token expired, try to refresh
+            spotifyAccessToken = await getSpotifyToken();
+            return res.status(503).json({
+                error: 'Service temporarily unavailable',
+                message: 'Refreshing Spotify token'
+            });
+        }
+
+        res.status(500).json({
+            error: 'Internal server error',
+            details: error.message
+        });
+    }
+});
