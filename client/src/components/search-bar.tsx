@@ -29,9 +29,11 @@ export default function SearchBar({ onGuess, disabled = false }: SearchBarProps)
       setIsSearching(true);
       try {
         const artists = await searchArtists(query);
+        console.log("Search results:", artists);
         setResults(artists);
       } catch (error) {
         console.error("Error searching artists:", error);
+        setResults([]);
       } finally {
         setIsSearching(false);
       }
