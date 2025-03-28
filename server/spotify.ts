@@ -228,18 +228,29 @@ export async function toArtistWithDetails(artist: SpotifyArtist): Promise<Artist
       members = isBand ? 2 + Math.abs((hash >> 3) % 5) : 1;
     }
     
-    // Gender - Use MusicBrainz if available
+    // Gender - Use MusicBrainz data if available
+    // According to MusicBrainz standards, gender is only for persons, not groups
     let gender: string;
-    if (musicBrainzInfo.gender) {
-      gender = musicBrainzInfo.gender;
-    } else if (musicBrainzInfo.type === 'Group') {
-      gender = 'Group';
+    if (musicBrainzInfo.type === 'Group') {
+      gender = 'Group'; // Groups don't have genders in MusicBrainz
+    } else if (musicBrainzInfo.gender) {
+      // MusicBrainz uses "male", "female", "non-binary", "other", "not applicable"
+      gender = musicBrainzInfo.gender.charAt(0).toUpperCase() + musicBrainzInfo.gender.slice(1);
     } else if (isBand) {
       gender = 'Group';
-    } else if (Math.abs(hash % 3) === 1) {
-      gender = 'Female';
     } else {
-      gender = 'Male';
+      // If no MusicBrainz data and not a band, look at artist name for clues
+      const femaleNames = [
+        'Lady', 'Queen', 'Girl', 'Beyoncé', 'Rihanna', 'Adele', 'Madonna', 
+        'Ariana', 'Katy', 'Whitney', 'Billie', 'Dua', 'Celine', 'Shakira', 
+        'Mariah', 'Amy', 'Ella', 'Björk', 'Taylor'
+      ];
+      
+      if (femaleNames.some(name => artist.name.includes(name))) {
+        gender = 'Female';
+      } else {
+        gender = 'Male'; // Default as a fallback if we can't determine
+      }
     }
     
     // Country - Use MusicBrainz if available
@@ -282,11 +293,22 @@ export async function toArtistWithDetails(artist: SpotifyArtist): Promise<Artist
     const debutYear = String(1960 + Math.abs(hash % 60));
     const members = isBand ? 2 + Math.abs((hash >> 3) % 5) : 1;
     
-    let gender = 'Male';
+    let gender: string;
     if (isBand) {
       gender = 'Group';
-    } else if (Math.abs(hash % 3) === 1) {
-      gender = 'Female'; 
+    } else {
+      // If not a band, look at artist name for clues
+      const femaleNames = [
+        'Lady', 'Queen', 'Girl', 'Beyoncé', 'Rihanna', 'Adele', 'Madonna', 
+        'Ariana', 'Katy', 'Whitney', 'Billie', 'Dua', 'Celine', 'Shakira', 
+        'Mariah', 'Amy', 'Ella', 'Björk', 'Taylor'
+      ];
+      
+      if (femaleNames.some(name => artist.name.includes(name))) {
+        gender = 'Female';
+      } else {
+        gender = 'Male'; // Default as a fallback if we can't determine
+      }
     }
     
     const countries = ['US', 'UK', 'CA', 'AU', 'SE', 'KR', 'JP', 'DE', 'FR', 'BR', 'ES'];

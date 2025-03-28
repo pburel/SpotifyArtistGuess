@@ -171,9 +171,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Try to find the artist in our map first
           let gender = '';
-          const exactMatch = artistGenderMap[artist.name];
-          if (exactMatch) {
-            gender = exactMatch;
+          const genderExactMatch = artistGenderMap[artist.name];
+          if (genderExactMatch) {
+            gender = genderExactMatch;
           } else {
             // If no exact match, check if the name contains specific band/group indicators
             if (artist.name.includes(' Band') || 
@@ -285,9 +285,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Try to find the artist in our map first
           let country = '';
-          const exactMatch = artistCountryMap[artist.name];
-          if (exactMatch) {
-            country = exactMatch;
+          const countryExactMatch = artistCountryMap[artist.name];
+          if (countryExactMatch) {
+            country = countryExactMatch;
           } else {
             // If no exact match, check for partial matches
             const partialMatch = Object.keys(artistCountryMap).find(name => 
@@ -348,31 +348,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // For search results, don't enrich with MusicBrainz data
       // Instead use smart defaults to provide more interesting data
       const artists = spotifyResults.map(artist => {
-        // Determine likely gender based on name and genres
+        // According to MusicBrainz standards, gender is only for persons, not groups
         let gender = '';
-        if (artist.name.includes(' Band') || 
-            artist.name.includes('Orchestra') || 
-            artist.name.includes('Ensemble') ||
-            artist.name.includes('Choir') ||
-            artist.name.includes('Quintet') ||
-            artist.name.includes('Quartet')) {
+        
+        // First, determine if this is a group/band
+        const isGroup = 
+          artist.name.includes(' Band') || 
+          artist.name.includes('Orchestra') || 
+          artist.name.includes('Ensemble') ||
+          artist.name.includes('Choir') ||
+          artist.name.includes('Quintet') ||
+          artist.name.includes('Quartet') ||
+          artist.name.includes(' and the ') ||
+          artist.name.includes(' & The ') ||
+          artist.name.includes('The ') ||
+          artist.name.includes(' Trio') ||
+          (artist.genres && artist.genres.some(g => 
+            g.includes('boy band') || 
+            g.includes('group') || 
+            g.includes('band')
+          ));
+          
+        // Well-known groups
+        const knownGroups = [
+          'The Beatles', 'Queen', 'The Rolling Stones', 'Led Zeppelin', 
+          'Pink Floyd', 'Coldplay', 'BTS', 'BLACKPINK', 'TWICE', 'Fleetwood Mac', 
+          'The Killers', 'Linkin Park', 'Metallica', 'AC/DC', 'ABBA', 'Nirvana', 
+          'Green Day', 'Backstreet Boys', 'Destiny\'s Child', 'One Direction', 
+          'The Supremes', 'Imagine Dragons', 'Guns N\' Roses', 'Red Hot Chili Peppers'
+        ];
+          
+        if (isGroup || knownGroups.some(group => artist.name.includes(group))) {
           gender = 'Group';
         } else {
-          // Check for common female artist indicators
-          const femaleNames = ['Lady', 'Queen', 'Girl', 'Beyoncé', 'Rihanna', 'Adele', 'Madonna', 'Dua Lipa'];
-          if (femaleNames.some(name => artist.name.includes(name))) {
+          // If not a group, determine gender
+          // Well-known female artists
+          const femaleArtists = [
+            'Taylor Swift', 'Beyoncé', 'Madonna', 'Lady Gaga', 'Adele', 
+            'Rihanna', 'Ariana Grande', 'Katy Perry', 'Whitney Houston', 
+            'Billie Eilish', 'Dua Lipa', 'Celine Dion', 'Shakira', 
+            'Mariah Carey', 'Amy Winehouse', 'Ella Fitzgerald', 'Björk',
+            'SZA', 'Lana Del Rey', 'Selena Gomez', 'Miley Cyrus', 'P!nk',
+            'Nicki Minaj', 'Alicia Keys', 'Christina Aguilera', 'Lizzo',
+            'Olivia Rodrigo', 'Kelly Clarkson'
+          ];
+          
+          // Well-known male artists  
+          const maleArtists = [
+            'Bruce Springsteen', 'Jay-Z', 'Kanye West', 'Drake', 
+            'The Weeknd', 'Michael Jackson', 'Elton John', 'Bruno Mars', 
+            'Justin Bieber', 'Ed Sheeran', 'Elvis Presley', 'Frank Sinatra', 
+            'David Bowie', 'Bob Dylan', 'Bob Marley', 'John Lennon', 
+            'Paul McCartney', 'Harry Styles', 'Bad Bunny', 'Post Malone',
+            'Travis Scott', 'Eminem', 'Kendrick Lamar', 'John Mayer',
+            'Justin Timberlake', 'Stevie Wonder', 'Shawn Mendes'
+          ];
+          
+          // Check for exact matches in our lists
+          if (femaleArtists.includes(artist.name)) {
             gender = 'Female';
+          } else if (maleArtists.includes(artist.name)) {
+            gender = 'Male';
           } else {
-            // Try to make an educated guess based on genres
-            if (artist.genres && artist.genres.some(g => 
-              g.includes('girl') || g.includes('female') || g.includes('women'))) {
+            // Check for partial matches
+            const femaleMatch = femaleArtists.some(name => 
+              artist.name.includes(name) || name.includes(artist.name)
+            );
+            
+            const maleMatch = maleArtists.some(name => 
+              artist.name.includes(name) || name.includes(artist.name)
+            );
+            
+            if (femaleMatch) {
               gender = 'Female';
-            } else if (artist.genres && artist.genres.some(g => 
-              g.includes('boy band') || g.includes('group') || g.includes('band'))) {
-              gender = 'Group';
-            } else {
-              // Default to Male as it's statistically more common in music industry
+            } else if (maleMatch) {
               gender = 'Male';
+            } else {
+              // Look for female indicators in name
+              const femaleIndicators = [
+                'Lady', 'Queen', 'Girl', 'Woman', 'Diva', 'Madam', 'Miss', 'Mrs', 'Ms'
+              ];
+              
+              if (femaleIndicators.some(indicator => artist.name.includes(indicator))) {
+                gender = 'Female';
+              } else if (artist.genres && artist.genres.some(g => 
+                g.includes('girl') || g.includes('female') || g.includes('women'))) {
+                gender = 'Female';
+              } else {
+                // Default to Male as it's statistically more common in music industry
+                gender = 'Male';
+              }
             }
           }
         }
@@ -452,9 +517,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Try to find the artist in our map first
         let country = '';
-        const exactMatch = artistCountryMap[artist.name];
-        if (exactMatch) {
-          country = exactMatch;
+        const countryExactMatch = artistCountryMap[artist.name];
+        if (countryExactMatch) {
+          country = countryExactMatch;
         } else {
           // If no exact match, check for partial matches
           const partialMatch = Object.keys(artistCountryMap).find(name => 
