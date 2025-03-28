@@ -15,17 +15,48 @@ export interface MusicBrainzArtistInfo {
   mbid?: string; // MusicBrainz ID
 }
 
+// Simple in-memory cache for MusicBrainz data
+const mbCache = new Map<string, MusicBrainzArtistInfo | null>();
+
+// Rate limiting management
+const REQUEST_DELAY = 1100; // At least 1.1 seconds between requests (Music Brainz recommends 1 request per second)
+let lastRequestTime = 0;
+
+// Helper function to wait between requests according to rate limit
+async function waitForRateLimit() {
+  const now = Date.now();
+  const timeSinceLastRequest = now - lastRequestTime;
+  
+  if (timeSinceLastRequest < REQUEST_DELAY && lastRequestTime !== 0) {
+    const waitTime = REQUEST_DELAY - timeSinceLastRequest;
+    console.log(`Rate limiting MusicBrainz API. Waiting ${waitTime}ms`);
+    await new Promise(resolve => setTimeout(resolve, waitTime));
+  }
+  
+  lastRequestTime = Date.now();
+}
+
 /**
  * Search for an artist in the MusicBrainz database
  * @param artistName The name of the artist to search for
  * @returns Promise with MusicBrainz artist data
  */
 export async function searchMusicBrainzArtist(artistName: string): Promise<MusicBrainzArtistInfo | null> {
+  // First check if we have this artist in cache
+  const cacheKey = `search:${artistName.toLowerCase()}`;
+  if (mbCache.has(cacheKey)) {
+    console.log(`Using cached data for artist search: ${artistName}`);
+    return mbCache.get(cacheKey) || null;
+  }
+  
   try {
+    // Apply rate limiting
+    await waitForRateLimit();
+    
     // Build the query URL with proper encoding
     const url = `${MUSICBRAINZ_API_URL}/artist/?query=${encodeURIComponent(artistName)}&fmt=json`;
     
-    // Make the request with a small delay to respect rate limits
+    // Make the request with proper headers
     const response = await axios.get(url, {
       headers: {
         'User-Agent': USER_AGENT,
@@ -52,12 +83,21 @@ export async function searchMusicBrainzArtist(artistName: string): Promise<Music
         info.startYear = artist['life-span'].begin.split('-')[0];
       }
       
+      // Cache the result
+      mbCache.set(cacheKey, info);
+      
       return info;
     }
     
+    // Cache negative result too to avoid repeated lookups
+    mbCache.set(cacheKey, null);
     return null;
   } catch (error) {
-    console.error('Error fetching from MusicBrainz API:', error);
+    if (axios.isAxiosError(error) && error.response?.status === 503) {
+      console.warn('MusicBrainz API rate limit exceeded. Using default values.');
+    } else {
+      console.error('Error fetching from MusicBrainz API:', error);
+    }
     return null;
   }
 }
@@ -67,9 +107,16 @@ export async function searchMusicBrainzArtist(artistName: string): Promise<Music
  * This fetches more detailed information about a specific artist
  */
 export async function getArtistByMbid(mbid: string): Promise<MusicBrainzArtistInfo | null> {
+  // First check if we have this MBID in cache
+  const cacheKey = `mbid:${mbid}`;
+  if (mbCache.has(cacheKey)) {
+    console.log(`Using cached data for MBID: ${mbid}`);
+    return mbCache.get(cacheKey) || null;
+  }
+  
   try {
-    // Wait for 1 second to respect rate limits (1 request per second is recommended)
-    await new Promise(resolve => setTimeout(resolve, 1100));
+    // Apply rate limiting
+    await waitForRateLimit();
     
     const url = `${MUSICBRAINZ_API_URL}/artist/${mbid}?fmt=json`;
     
@@ -93,9 +140,19 @@ export async function getArtistByMbid(mbid: string): Promise<MusicBrainzArtistIn
       info.startYear = artist['life-span'].begin.split('-')[0];
     }
     
+    // Cache the result
+    mbCache.set(cacheKey, info);
+    
     return info;
   } catch (error) {
-    console.error('Error fetching artist by MBID:', error);
+    if (axios.isAxiosError(error) && error.response?.status === 503) {
+      console.warn('MusicBrainz API rate limit exceeded. Using default values.');
+    } else {
+      console.error('Error fetching artist by MBID:', error);
+    }
+    
+    // Cache negative result to avoid repeated lookups
+    mbCache.set(cacheKey, null);
     return null;
   }
 }
@@ -105,6 +162,14 @@ export async function getArtistByMbid(mbid: string): Promise<MusicBrainzArtistIn
  * First searches for the artist, then fetches detailed info if found
  */
 export async function getEnrichedArtistInfo(artistName: string): Promise<MusicBrainzArtistInfo> {
+  // First check if we have cached enriched data
+  const cacheKey = `enriched:${artistName.toLowerCase()}`;
+  if (mbCache.has(cacheKey)) {
+    console.log(`Using cached enriched data for: ${artistName}`);
+    // We know this will always be a MusicBrainzArtistInfo object, not null
+    return mbCache.get(cacheKey) as MusicBrainzArtistInfo;
+  }
+  
   try {
     // Default values if MusicBrainz data is not available
     const defaultInfo: MusicBrainzArtistInfo = {
@@ -117,27 +182,35 @@ export async function getEnrichedArtistInfo(artistName: string): Promise<MusicBr
     // First search for the artist
     const searchResult = await searchMusicBrainzArtist(artistName);
     
+    let result: MusicBrainzArtistInfo;
+    
     if (!searchResult) {
-      return defaultInfo;
-    }
-    
-    // If we have an MBID, get more detailed info
-    if (searchResult.mbid) {
+      result = defaultInfo;
+    } 
+    else if (searchResult.mbid) {
+      // If we have an MBID, get more detailed info
       const detailedInfo = await getArtistByMbid(searchResult.mbid);
-      if (detailedInfo) {
-        return detailedInfo;
-      }
+      result = detailedInfo || searchResult;
+    } 
+    else {
+      // Return the search result if no MBID
+      result = searchResult;
     }
     
-    // Return the search result if we couldn't get detailed info
-    return searchResult;
+    // Cache the result
+    mbCache.set(cacheKey, result);
+    return result;
   } catch (error) {
     console.error('Error in getEnrichedArtistInfo:', error);
-    return {
+    const defaultInfo: MusicBrainzArtistInfo = {
       type: undefined,
       gender: undefined,
       country: undefined,
       startYear: undefined
     };
+    
+    // Cache the default info to avoid repeated failures
+    mbCache.set(cacheKey, defaultInfo);
+    return defaultInfo;
   }
 }
