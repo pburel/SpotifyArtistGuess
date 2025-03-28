@@ -37,7 +37,7 @@ export default function PreviousGuesses({ guesses, targetArtist }: PreviousGuess
           <GuessCard 
             guess={guess} 
             targetArtist={targetArtist} 
-            isLatest={index === latestGuessIndex}
+            isLatest={index === guesses.length - 1}
           />
         </div>
       ))}
