@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 
 // Custom CSS class for all card labels
 const labelStyle = {
-  fontSize: '15.2px',
+  fontSize: "15.2px",
   fontWeight: 500,
-  color: 'white'
+  color: "white",
 };
 
 interface PreviousGuessesProps {
@@ -14,10 +14,13 @@ interface PreviousGuessesProps {
   targetArtist?: ArtistWithDetails | null;
 }
 
-export default function PreviousGuesses({ guesses, targetArtist }: PreviousGuessesProps) {
+export default function PreviousGuesses({
+  guesses,
+  targetArtist,
+}: PreviousGuessesProps) {
   // Track the latest guess index to only animate the newest one
   const [latestGuessIndex, setLatestGuessIndex] = useState<number>(-1);
-  
+
   useEffect(() => {
     // When guesses change, set the latest index to the newest guess
     if (guesses.length > 0) {
@@ -34,10 +37,10 @@ export default function PreviousGuesses({ guesses, targetArtist }: PreviousGuess
       <h2 className="text-xl font-bold text-white mb-4">Previous Guesses</h2>
       {guesses.map((guess, index) => (
         <div key={`${guess.id}-${index}`} className="mb-6">
-          <GuessCard 
-            guess={guess} 
-            targetArtist={targetArtist} 
-            isLatest={index === guesses.length - 1}
+          <GuessCard
+            guess={guess}
+            targetArtist={targetArtist}
+            isLatest={index === 0} //guesses.length - 1
           />
         </div>
       ))}
@@ -53,7 +56,7 @@ interface GuessCardProps {
 
 function GuessCard({ guess, targetArtist, isLatest = false }: GuessCardProps) {
   // Add a reference to animate only this card when it's the latest
-  const animationClass = isLatest ? 'animate-match' : '';
+  const animationClass = isLatest ? "animate-match" : "";
   // Can't do comparisons without target artist
   if (!targetArtist) {
     return (
@@ -65,14 +68,22 @@ function GuessCard({ guess, targetArtist, isLatest = false }: GuessCardProps) {
 
   // Compare debut years if both are available
   const guessYear = guess.debutYear ? parseInt(guess.debutYear) : 0;
-  const targetYear = targetArtist.debutYear ? parseInt(targetArtist.debutYear) : 0; 
-  
+  const targetYear = targetArtist.debutYear
+    ? parseInt(targetArtist.debutYear)
+    : 0;
+
   let yearComparison: JSX.Element | null = null;
   if (guessYear && targetYear) {
     if (guessYear < targetYear) {
       yearComparison = (
         <div className="arrow-icon app-spot-guess">
-          <svg focusable="false" width="1.25rem" height="1.25rem" viewBox="0 0 24 24" fill="white">
+          <svg
+            focusable="false"
+            width="1.25rem"
+            height="1.25rem"
+            viewBox="0 0 24 24"
+            fill="white"
+          >
             <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"></path>
           </svg>
         </div>
@@ -80,7 +91,13 @@ function GuessCard({ guess, targetArtist, isLatest = false }: GuessCardProps) {
     } else if (guessYear > targetYear) {
       yearComparison = (
         <div className="arrow-icon app-spot-guess">
-          <svg focusable="false" width="1.25rem" height="1.25rem" viewBox="0 0 24 24" fill="white">
+          <svg
+            focusable="false"
+            width="1.25rem"
+            height="1.25rem"
+            viewBox="0 0 24 24"
+            fill="white"
+          >
             <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"></path>
           </svg>
         </div>
@@ -88,23 +105,35 @@ function GuessCard({ guess, targetArtist, isLatest = false }: GuessCardProps) {
     } else {
       yearComparison = (
         <div className="arrow-icon app-spot-guess text-green-400">
-          <svg focusable="false" width="1.25rem" height="1.25rem" viewBox="0 0 24 24" fill="currentColor">
+          <svg
+            focusable="false"
+            width="1.25rem"
+            height="1.25rem"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
             <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path>
           </svg>
         </div>
       );
     }
   }
-  
+
   // Compare popularity
   const guessPopularity = guess.popularity || 0;
   const targetPopularity = targetArtist.popularity || 0;
-  
+
   let popularityComparison: JSX.Element | null = null;
   if (guessPopularity < targetPopularity) {
     popularityComparison = (
       <div className="arrow-icon app-spot-guess">
-        <svg focusable="false" width="1.25rem" height="1.25rem" viewBox="0 0 24 24" fill="white">
+        <svg
+          focusable="false"
+          width="1.25rem"
+          height="1.25rem"
+          viewBox="0 0 24 24"
+          fill="white"
+        >
           <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6 1.41 1.41z"></path>
         </svg>
       </div>
@@ -112,7 +141,13 @@ function GuessCard({ guess, targetArtist, isLatest = false }: GuessCardProps) {
   } else if (guessPopularity > targetPopularity) {
     popularityComparison = (
       <div className="arrow-icon app-spot-guess">
-        <svg focusable="false" width="1.25rem" height="1.25rem" viewBox="0 0 24 24" fill="white">
+        <svg
+          focusable="false"
+          width="1.25rem"
+          height="1.25rem"
+          viewBox="0 0 24 24"
+          fill="white"
+        >
           <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"></path>
         </svg>
       </div>
@@ -120,140 +155,199 @@ function GuessCard({ guess, targetArtist, isLatest = false }: GuessCardProps) {
   } else {
     popularityComparison = (
       <div className="arrow-icon app-spot-guess text-green-400">
-        <svg focusable="false" width="1.25rem" height="1.25rem" viewBox="0 0 24 24" fill="currentColor">
+        <svg
+          focusable="false"
+          width="1.25rem"
+          height="1.25rem"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
           <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path>
         </svg>
       </div>
     );
   }
-  
+
   // Gender comparison - exact match only
-  const genderMatch = (
-    (guess.gender === targetArtist.gender) || 
-    (guess.gender?.toLowerCase() === targetArtist.gender?.toLowerCase())
-  );
-  
+  const genderMatch =
+    guess.gender === targetArtist.gender ||
+    guess.gender?.toLowerCase() === targetArtist.gender?.toLowerCase();
+
   // Country comparison - exact match only
   const countryMatch = guess.country === targetArtist.country;
-  
+
   // Set up flags
   const countryFlags: Record<string, string> = {
-    'US': '🇺🇸', 'UK': '🇬🇧', 'CA': '🇨🇦', 'AU': '🇦🇺', 'SE': '🇸🇪',
-    'KR': '🇰🇷', 'JP': '🇯🇵', 'BR': '🇧🇷', 'ES': '🇪🇸', 'DE': '🇩🇪',
-    'FR': '🇫🇷', 'IT': '🇮🇹', 'CO': '🇨🇴', 'BB': '🇧🇧', 'JM': '🇯🇲',
-    'IS': '🇮🇸'
+    US: "🇺🇸",
+    UK: "🇬🇧",
+    CA: "🇨🇦",
+    AU: "🇦🇺",
+    SE: "🇸🇪",
+    KR: "🇰🇷",
+    JP: "🇯🇵",
+    BR: "🇧🇷",
+    ES: "🇪🇸",
+    DE: "🇩🇪",
+    FR: "🇫🇷",
+    IT: "🇮🇹",
+    CO: "🇨🇴",
+    BB: "🇧🇧",
+    JM: "🇯🇲",
+    IS: "🇮🇸",
   };
-  
-  const guessFlag = guess.country && countryFlags[guess.country] ? countryFlags[guess.country] : '';
-  
+
+  const guessFlag =
+    guess.country && countryFlags[guess.country]
+      ? countryFlags[guess.country]
+      : "";
+
   // Convert popularity to rank format with # prefix
-  const popularity = guess.popularity ? `#${guess.popularity}` : '—';
-  
+  const popularity = guess.popularity ? `#${guess.popularity}` : "—";
+
   // Determine gender display value
-  let gender = '';
-  if (guess.gender === 'Group') {
-    gender = 'Group';
-  } else if (guess.gender === 'Male' || guess.gender === 'male') {
-    gender = 'Male';
-  } else if (guess.gender === 'Female' || guess.gender === 'female') {
-    gender = 'Female';
-  } else if (guess.gender === 'Other' || guess.gender === 'other') {
-    gender = 'Other';
+  let gender = "";
+  if (guess.gender === "Group") {
+    gender = "Group";
+  } else if (guess.gender === "Male" || guess.gender === "male") {
+    gender = "Male";
+  } else if (guess.gender === "Female" || guess.gender === "female") {
+    gender = "Female";
+  } else if (guess.gender === "Other" || guess.gender === "other") {
+    gender = "Other";
   } else {
-    gender = 'Unknown';
+    gender = "Unknown";
   }
-  
+
   // Get first genre with capitalization
-  const genre = guess.genres && guess.genres.length > 0 
-    ? guess.genres[0].charAt(0).toUpperCase() + guess.genres[0].slice(1) 
-    : 'Unknown';
-  
+  const genre =
+    guess.genres && guess.genres.length > 0
+      ? guess.genres[0].charAt(0).toUpperCase() + guess.genres[0].slice(1)
+      : "Unknown";
+
   return (
     <div className="w-full bg-gray-900 rounded-lg overflow-hidden mb-4">
       <div className="flex items-center p-4 pb-3">
         <div className="w-20 h-20 rounded-full overflow-hidden mr-4">
           {guess.imageUrl ? (
-            <img src={guess.imageUrl} alt={guess.name} className="w-full h-full object-cover" />
+            <img
+              src={guess.imageUrl}
+              alt={guess.name}
+              className="w-full h-full object-cover"
+            />
           ) : (
             <div className="w-full h-full bg-gray-700 flex items-center justify-center">
-              <span className="text-2xl font-bold text-white">{guess.name.charAt(0)}</span>
+              <span className="text-2xl font-bold text-white">
+                {guess.name.charAt(0)}
+              </span>
             </div>
           )}
         </div>
         <h3 className="text-2xl font-bold text-white">{guess.name}</h3>
       </div>
-      
+
       <div className="grid grid-cols-3 gap-2 p-2">
         {/* Debut */}
-        <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${
-          guessYear === targetYear 
-            ? (isLatest ? `correct ${animationClass}` : 'bg-green-800 bg-opacity-50') 
-            : 'bg-gray-800'
-        }`}>
+        <div
+          className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${
+            guessYear === targetYear
+              ? isLatest
+                ? `correct ${animationClass}`
+                : "bg-green-800 bg-opacity-50"
+              : "bg-gray-800"
+          }`}
+        >
           <span style={labelStyle}>Debut</span>
           <div className="flex items-center">
-            <span className="text-white text-lg font-semibold">{guess.debutYear || '—'}</span>
+            <span className="text-white text-lg font-semibold">
+              {guess.debutYear || "—"}
+            </span>
             {yearComparison}
           </div>
         </div>
 
         {/* Members */}
-        <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${
-          guess.members === targetArtist.members 
-            ? (isLatest ? `correct ${animationClass}` : 'bg-green-800 bg-opacity-50') 
-            : 'bg-gray-800'
-        }`}>
+        <div
+          className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${
+            guess.members === targetArtist.members
+              ? isLatest
+                ? `correct ${animationClass}`
+                : "bg-green-800 bg-opacity-50"
+              : "bg-gray-800"
+          }`}
+        >
           <span style={labelStyle}>Members</span>
           <span className="text-white text-lg font-semibold">
-            {guess.members ? (guess.members > 1 ? guess.members.toString() : 'Solo') : 'Solo'}
+            {guess.members
+              ? guess.members > 1
+                ? guess.members.toString()
+                : "Solo"
+              : "Solo"}
           </span>
         </div>
 
         {/* Popularity */}
-        <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${
-          guessPopularity === targetPopularity 
-            ? (isLatest ? `correct ${animationClass}` : 'bg-green-800 bg-opacity-50') 
-            : 'bg-gray-800'
-        }`}>
+        <div
+          className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${
+            guessPopularity === targetPopularity
+              ? isLatest
+                ? `correct ${animationClass}`
+                : "bg-green-800 bg-opacity-50"
+              : "bg-gray-800"
+          }`}
+        >
           <span style={labelStyle}>Popularity</span>
           <div className="flex items-center">
-            <span className="text-white text-lg font-semibold">{popularity}</span>
+            <span className="text-white text-lg font-semibold">
+              {popularity}
+            </span>
             {popularityComparison}
           </div>
         </div>
 
         {/* Gender */}
-        <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${
-          genderMatch 
-            ? (isLatest ? `correct ${animationClass}` : 'bg-green-800 bg-opacity-50') 
-            : 'bg-gray-800'
-        }`}>
+        <div
+          className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${
+            genderMatch
+              ? isLatest
+                ? `correct ${animationClass}`
+                : "bg-green-800 bg-opacity-50"
+              : "bg-gray-800"
+          }`}
+        >
           <span style={labelStyle}>Gender</span>
           <span className="text-white text-lg font-semibold">{gender}</span>
         </div>
 
         {/* Genre */}
-        <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${
-          guess.genres?.[0] === targetArtist.genres?.[0] 
-            ? (isLatest ? `correct ${animationClass}` : 'bg-green-800 bg-opacity-50') 
-            : 'bg-gray-800'
-        }`}>
+        <div
+          className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${
+            guess.genres?.[0] === targetArtist.genres?.[0]
+              ? isLatest
+                ? `correct ${animationClass}`
+                : "bg-green-800 bg-opacity-50"
+              : "bg-gray-800"
+          }`}
+        >
           <span style={labelStyle}>Genre</span>
           <span className="text-white text-lg font-semibold">{genre}</span>
         </div>
 
         {/* Country */}
-        <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${
-          countryMatch 
-            ? (isLatest ? `correct ${animationClass}` : 'bg-green-800 bg-opacity-50') 
-            : 'bg-gray-800'
-        }`}>
+        <div
+          className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${
+            countryMatch
+              ? isLatest
+                ? `correct ${animationClass}`
+                : "bg-green-800 bg-opacity-50"
+              : "bg-gray-800"
+          }`}
+        >
           <span style={labelStyle}>Country</span>
           <div className="flex flex-col items-center">
-            {guessFlag && (
-              <span className="text-xl">{guessFlag}</span>
-            )}
-            <span className="text-white text-sm font-semibold">{guess.country || '—'}</span>
+            {guessFlag && <span className="text-xl">{guessFlag}</span>}
+            <span className="text-white text-sm font-semibold">
+              {guess.country || "—"}
+            </span>
           </div>
         </div>
       </div>
@@ -264,59 +358,83 @@ function GuessCard({ guess, targetArtist, isLatest = false }: GuessCardProps) {
 // Fallback component when target artist isn't available
 function SimpleGuessCard({ guess }: { guess: ArtistWithDetails }) {
   // Set default values for missing data
-  const debut = guess.debutYear || '—';
-  const members = guess.members ? guess.members.toString() : 'Solo';
-  const popularity = guess.popularity ? `#${guess.popularity}` : '—';
-  
+  const debut = guess.debutYear || "—";
+  const members = guess.members ? guess.members.toString() : "Solo";
+  const popularity = guess.popularity ? `#${guess.popularity}` : "—";
+
   // Determine gender display value
-  let gender = '';
-  if (guess.gender === 'Group') {
-    gender = 'Group';
-  } else if (guess.gender === 'Male' || guess.gender === 'male') {
-    gender = 'Male';
-  } else if (guess.gender === 'Female' || guess.gender === 'female') {
-    gender = 'Female';
-  } else if (guess.gender === 'Other' || guess.gender === 'other') {
-    gender = 'Other';
-  } else if (guess.name.includes(' Band') || guess.name.includes('Orchestra')) {
-    gender = 'Group';
+  let gender = "";
+  if (guess.gender === "Group") {
+    gender = "Group";
+  } else if (guess.gender === "Male" || guess.gender === "male") {
+    gender = "Male";
+  } else if (guess.gender === "Female" || guess.gender === "female") {
+    gender = "Female";
+  } else if (guess.gender === "Other" || guess.gender === "other") {
+    gender = "Other";
+  } else if (guess.name.includes(" Band") || guess.name.includes("Orchestra")) {
+    gender = "Group";
   } else {
-    gender = 'Unknown';
+    gender = "Unknown";
   }
-  
-  const genre = guess.genres && guess.genres.length > 0 
-    ? guess.genres[0].charAt(0).toUpperCase() + guess.genres[0].slice(1) 
-    : 'Unknown';
-  const country = guess.country || '';
-  
+
+  const genre =
+    guess.genres && guess.genres.length > 0
+      ? guess.genres[0].charAt(0).toUpperCase() + guess.genres[0].slice(1)
+      : "Unknown";
+  const country = guess.country || "";
+
   // Map country codes to flag emojis - simplified version
   const countryFlags: Record<string, string> = {
-    'US': '🇺🇸', 'UK': '🇬🇧', 'CA': '🇨🇦', 'AU': '🇦🇺', 'SE': '🇸🇪',
-    'KR': '🇰🇷', 'JP': '🇯🇵', 'BR': '🇧🇷', 'ES': '🇪🇸', 'DE': '🇩🇪',
-    'FR': '🇫🇷', 'IT': '🇮🇹', 'CO': '🇨🇴', 'BB': '🇧🇧', 'JM': '🇯🇲',
-    'IS': '🇮🇸'
+    US: "🇺🇸",
+    UK: "🇬🇧",
+    CA: "🇨🇦",
+    AU: "🇦🇺",
+    SE: "🇸🇪",
+    KR: "🇰🇷",
+    JP: "🇯🇵",
+    BR: "🇧🇷",
+    ES: "🇪🇸",
+    DE: "🇩🇪",
+    FR: "🇫🇷",
+    IT: "🇮🇹",
+    CO: "🇨🇴",
+    BB: "🇧🇧",
+    JM: "🇯🇲",
+    IS: "🇮🇸",
   };
-  
-  const countryFlag = country && countryFlags[country] ? countryFlags[country] : '';
-  
+
+  const countryFlag =
+    country && countryFlags[country] ? countryFlags[country] : "";
+
   // Common style for labels
-  const labelStyle = { fontSize: '15.2px', fontWeight: 500, color: 'rgb(156, 163, 175)' };
+  const labelStyle = {
+    fontSize: "15.2px",
+    fontWeight: 500,
+    color: "rgb(156, 163, 175)",
+  };
 
   return (
     <>
       <div className="flex items-center p-4 pb-3">
         <div className="w-20 h-20 rounded-full overflow-hidden mr-4">
           {guess.imageUrl ? (
-            <img src={guess.imageUrl} alt={guess.name} className="w-full h-full object-cover" />
+            <img
+              src={guess.imageUrl}
+              alt={guess.name}
+              className="w-full h-full object-cover"
+            />
           ) : (
             <div className="w-full h-full bg-gray-700 flex items-center justify-center">
-              <span className="text-2xl font-bold text-white">{guess.name.charAt(0)}</span>
+              <span className="text-2xl font-bold text-white">
+                {guess.name.charAt(0)}
+              </span>
             </div>
           )}
         </div>
         <h3 className="text-2xl font-bold text-white">{guess.name}</h3>
       </div>
-      
+
       <div className="grid grid-cols-3 gap-2 p-2">
         {/* Debut */}
         <div className="bg-gray-800 rounded-lg p-2 flex flex-col items-center">
@@ -352,10 +470,10 @@ function SimpleGuessCard({ guess }: { guess: ArtistWithDetails }) {
         <div className="bg-gray-800 rounded-lg p-2 flex flex-col items-center">
           <span style={labelStyle}>Country</span>
           <div className="flex flex-col items-center">
-            {countryFlag && (
-              <span className="text-xl">{countryFlag}</span>
-            )}
-            <span className="text-white text-sm font-semibold">{country || '—'}</span>
+            {countryFlag && <span className="text-xl">{countryFlag}</span>}
+            <span className="text-white text-sm font-semibold">
+              {country || "—"}
+            </span>
           </div>
         </div>
       </div>
