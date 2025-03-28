@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArtistWithDetails } from '@shared/types';
+import { ArrowUp, ArrowDown, ArrowRight } from 'lucide-react';
 
 // Map country codes to flag emojis
 const countryFlags: Record<string, string> = {

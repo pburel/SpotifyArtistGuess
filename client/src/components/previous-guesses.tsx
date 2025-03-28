@@ -1,12 +1,13 @@
-import { ArtistWithDetails } from "@shared/types";
-import { CheckCircle, XCircle } from "lucide-react";
-import ArtistCard from "./artist-card";
+import { ArtistWithDetails, GameState } from "@shared/types";
+import { CheckCircle, XCircle, ArrowUp, ArrowDown, ArrowRight } from "lucide-react";
+import { useState, useEffect } from "react";
 
 interface PreviousGuessesProps {
   guesses: ArtistWithDetails[];
+  targetArtist?: ArtistWithDetails | null;
 }
 
-export default function PreviousGuesses({ guesses }: PreviousGuessesProps) {
+export default function PreviousGuesses({ guesses, targetArtist }: PreviousGuessesProps) {
   if (guesses.length === 0) {
     return null;
   }
@@ -16,10 +17,262 @@ export default function PreviousGuesses({ guesses }: PreviousGuessesProps) {
       <h2 className="text-xl font-bold text-white mb-4">Previous Guesses</h2>
       {guesses.map((guess, index) => (
         <div key={`${guess.id}-${index}`} className="mb-6">
-          <ArtistCard artist={guess} />
+          <GuessCard guess={guess} targetArtist={targetArtist} />
         </div>
       ))}
     </div>
+  );
+}
+
+interface GuessCardProps {
+  guess: ArtistWithDetails;
+  targetArtist?: ArtistWithDetails | null;
+}
+
+function GuessCard({ guess, targetArtist }: GuessCardProps) {
+  // Can't do comparisons without target artist
+  if (!targetArtist) {
+    return (
+      <div className="w-full bg-gray-900 rounded-lg overflow-hidden mb-4">
+        <SimpleGuessCard guess={guess} />
+      </div>
+    );
+  }
+
+  // Compare debut years if both are available
+  const guessYear = guess.debutYear ? parseInt(guess.debutYear) : 0;
+  const targetYear = targetArtist.debutYear ? parseInt(targetArtist.debutYear) : 0; 
+  
+  let yearComparison: JSX.Element | null = null;
+  if (guessYear && targetYear) {
+    if (guessYear < targetYear) {
+      yearComparison = <ArrowUp className="w-4 h-4 text-red-400 ml-1" />;
+    } else if (guessYear > targetYear) {
+      yearComparison = <ArrowDown className="w-4 h-4 text-red-400 ml-1" />;
+    } else {
+      yearComparison = <ArrowRight className="w-4 h-4 text-green-400 ml-1" />;
+    }
+  }
+  
+  // Compare popularity
+  const guessPopularity = guess.popularity || 0;
+  const targetPopularity = targetArtist.popularity || 0;
+  
+  let popularityComparison: JSX.Element | null = null;
+  if (guessPopularity < targetPopularity) {
+    popularityComparison = <ArrowUp className="w-4 h-4 text-red-400 ml-1" />;
+  } else if (guessPopularity > targetPopularity) {
+    popularityComparison = <ArrowDown className="w-4 h-4 text-red-400 ml-1" />;
+  } else {
+    popularityComparison = <ArrowRight className="w-4 h-4 text-green-400 ml-1" />;
+  }
+  
+  // Gender comparison - exact match only
+  const genderMatch = (
+    (guess.gender === targetArtist.gender) || 
+    (guess.gender?.toLowerCase() === targetArtist.gender?.toLowerCase())
+  );
+  
+  // Country comparison - exact match only
+  const countryMatch = guess.country === targetArtist.country;
+  
+  // Set up flags
+  const countryFlags: Record<string, string> = {
+    'US': '🇺🇸', 'UK': '🇬🇧', 'CA': '🇨🇦', 'AU': '🇦🇺', 'SE': '🇸🇪',
+    'KR': '🇰🇷', 'JP': '🇯🇵', 'BR': '🇧🇷', 'ES': '🇪🇸', 'DE': '🇩🇪',
+    'FR': '🇫🇷', 'IT': '🇮🇹', 'CO': '🇨🇴', 'BB': '🇧🇧', 'JM': '🇯🇲',
+    'IS': '🇮🇸'
+  };
+  
+  const guessFlag = guess.country && countryFlags[guess.country] ? countryFlags[guess.country] : '';
+  
+  // Convert popularity to rank format with # prefix
+  const popularity = guess.popularity ? `#${guess.popularity}` : '—';
+  
+  // Determine gender display value
+  let gender = '';
+  if (guess.gender === 'Group') {
+    gender = 'Group';
+  } else if (guess.gender === 'Male' || guess.gender === 'male') {
+    gender = 'Male';
+  } else if (guess.gender === 'Female' || guess.gender === 'female') {
+    gender = 'Female';
+  } else if (guess.gender === 'Other' || guess.gender === 'other') {
+    gender = 'Other';
+  } else {
+    gender = 'Unknown';
+  }
+  
+  // Get first genre with capitalization
+  const genre = guess.genres && guess.genres.length > 0 
+    ? guess.genres[0].charAt(0).toUpperCase() + guess.genres[0].slice(1) 
+    : 'Unknown';
+  
+  return (
+    <div className="w-full bg-gray-900 rounded-lg overflow-hidden mb-4">
+      <div className="flex items-center p-4 pb-3">
+        <div className="w-20 h-20 rounded-full overflow-hidden mr-4">
+          {guess.imageUrl ? (
+            <img src={guess.imageUrl} alt={guess.name} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-gray-700 flex items-center justify-center">
+              <span className="text-2xl font-bold text-white">{guess.name.charAt(0)}</span>
+            </div>
+          )}
+        </div>
+        <h3 className="text-2xl font-bold text-white">{guess.name}</h3>
+      </div>
+      
+      <div className="grid grid-cols-3 gap-2 p-2">
+        {/* Debut */}
+        <div className={`rounded-lg p-2 flex flex-col items-center ${guessYear === targetYear ? 'bg-green-800 bg-opacity-50' : 'bg-gray-800'}`}>
+          <span className="text-gray-400 text-xs">Debut</span>
+          <div className="flex items-center">
+            <span className="text-white text-lg font-semibold">{guess.debutYear || '—'}</span>
+            {yearComparison}
+          </div>
+        </div>
+
+        {/* Members */}
+        <div className="bg-gray-800 rounded-lg p-2 flex flex-col items-center">
+          <span className="text-gray-400 text-xs">Members</span>
+          <span className="text-white text-lg font-semibold">
+            {guess.members ? (guess.members > 1 ? guess.members.toString() : 'Solo') : 'Solo'}
+          </span>
+        </div>
+
+        {/* Popularity */}
+        <div className={`rounded-lg p-2 flex flex-col items-center ${guessPopularity === targetPopularity ? 'bg-green-800 bg-opacity-50' : 'bg-gray-800'}`}>
+          <span className="text-gray-400 text-xs">Popularity</span>
+          <div className="flex items-center">
+            <span className="text-white text-lg font-semibold">{popularity}</span>
+            {popularityComparison}
+          </div>
+        </div>
+
+        {/* Gender */}
+        <div className={`rounded-lg p-2 flex flex-col items-center ${genderMatch ? 'bg-green-800 bg-opacity-50' : 'bg-gray-800'}`}>
+          <span className="text-gray-300 text-xs">Gender</span>
+          <span className="text-white text-lg font-semibold">{gender}</span>
+        </div>
+
+        {/* Genre */}
+        <div className="bg-gray-800 rounded-lg p-2 flex flex-col items-center">
+          <span className="text-gray-400 text-xs">Genre</span>
+          <span className="text-white text-lg font-semibold">{genre}</span>
+        </div>
+
+        {/* Country */}
+        <div className={`rounded-lg p-2 flex flex-col items-center ${countryMatch ? 'bg-green-800 bg-opacity-50' : 'bg-gray-800'}`}>
+          <span className="text-gray-400 text-xs">Country</span>
+          <div className="flex flex-col items-center">
+            {guessFlag && (
+              <span className="text-xl">{guessFlag}</span>
+            )}
+            <span className="text-white text-sm font-semibold">{guess.country || '—'}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Fallback component when target artist isn't available
+function SimpleGuessCard({ guess }: { guess: ArtistWithDetails }) {
+  // Set default values for missing data
+  const debut = guess.debutYear || '—';
+  const members = guess.members ? guess.members.toString() : 'Solo';
+  const popularity = guess.popularity ? `#${guess.popularity}` : '—';
+  
+  // Determine gender display value
+  let gender = '';
+  if (guess.gender === 'Group') {
+    gender = 'Group';
+  } else if (guess.gender === 'Male' || guess.gender === 'male') {
+    gender = 'Male';
+  } else if (guess.gender === 'Female' || guess.gender === 'female') {
+    gender = 'Female';
+  } else if (guess.gender === 'Other' || guess.gender === 'other') {
+    gender = 'Other';
+  } else if (guess.name.includes(' Band') || guess.name.includes('Orchestra')) {
+    gender = 'Group';
+  } else {
+    gender = 'Unknown';
+  }
+  
+  const genre = guess.genres && guess.genres.length > 0 
+    ? guess.genres[0].charAt(0).toUpperCase() + guess.genres[0].slice(1) 
+    : 'Unknown';
+  const country = guess.country || '';
+  
+  // Map country codes to flag emojis - simplified version
+  const countryFlags: Record<string, string> = {
+    'US': '🇺🇸', 'UK': '🇬🇧', 'CA': '🇨🇦', 'AU': '🇦🇺', 'SE': '🇸🇪',
+    'KR': '🇰🇷', 'JP': '🇯🇵', 'BR': '🇧🇷', 'ES': '🇪🇸', 'DE': '🇩🇪',
+    'FR': '🇫🇷', 'IT': '🇮🇹', 'CO': '🇨🇴', 'BB': '🇧🇧', 'JM': '🇯🇲',
+    'IS': '🇮🇸'
+  };
+  
+  const countryFlag = country && countryFlags[country] ? countryFlags[country] : '';
+
+  return (
+    <>
+      <div className="flex items-center p-4 pb-3">
+        <div className="w-20 h-20 rounded-full overflow-hidden mr-4">
+          {guess.imageUrl ? (
+            <img src={guess.imageUrl} alt={guess.name} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-gray-700 flex items-center justify-center">
+              <span className="text-2xl font-bold text-white">{guess.name.charAt(0)}</span>
+            </div>
+          )}
+        </div>
+        <h3 className="text-2xl font-bold text-white">{guess.name}</h3>
+      </div>
+      
+      <div className="grid grid-cols-3 gap-2 p-2">
+        {/* Debut */}
+        <div className="bg-gray-800 rounded-lg p-2 flex flex-col items-center">
+          <span className="text-gray-400 text-xs">Debut</span>
+          <span className="text-white text-lg font-semibold">{debut}</span>
+        </div>
+
+        {/* Members */}
+        <div className="bg-gray-800 rounded-lg p-2 flex flex-col items-center">
+          <span className="text-gray-400 text-xs">Members</span>
+          <span className="text-white text-lg font-semibold">{members}</span>
+        </div>
+
+        {/* Popularity */}
+        <div className="bg-gray-800 rounded-lg p-2 flex flex-col items-center">
+          <span className="text-gray-400 text-xs">Popularity</span>
+          <span className="text-white text-lg font-semibold">{popularity}</span>
+        </div>
+
+        {/* Gender */}
+        <div className="bg-gray-800 rounded-lg p-2 flex flex-col items-center">
+          <span className="text-gray-300 text-xs">Gender</span>
+          <span className="text-white text-lg font-semibold">{gender}</span>
+        </div>
+
+        {/* Genre */}
+        <div className="bg-gray-800 rounded-lg p-2 flex flex-col items-center">
+          <span className="text-gray-400 text-xs">Genre</span>
+          <span className="text-white text-lg font-semibold">{genre}</span>
+        </div>
+
+        {/* Country */}
+        <div className="bg-gray-800 rounded-lg p-2 flex flex-col items-center">
+          <span className="text-gray-400 text-xs">Country</span>
+          <div className="flex flex-col items-center">
+            {countryFlag && (
+              <span className="text-xl">{countryFlag}</span>
+            )}
+            <span className="text-white text-sm font-semibold">{country || '—'}</span>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
 

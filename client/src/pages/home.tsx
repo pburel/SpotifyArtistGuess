@@ -142,7 +142,7 @@ export default function Home() {
           targetArtistName={gameState.targetArtist?.name}
         />
         
-        <PreviousGuesses guesses={gameState.previousGuesses} />
+        <PreviousGuesses guesses={gameState.previousGuesses} targetArtist={gameState.targetArtist} />
         
         <GameResult
           isOpen={showResult}
