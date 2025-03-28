@@ -139,6 +139,7 @@ export default function Home() {
           maxAttempts={MAX_ATTEMPTS}
           hint={currentHint}
           showHint={gameState.hintIndex > 0 && gameState.previousGuesses.length > 0}
+          targetArtistName={gameState.targetArtist?.name}
         />
         
         <PreviousGuesses guesses={gameState.previousGuesses} />

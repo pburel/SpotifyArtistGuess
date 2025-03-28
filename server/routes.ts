@@ -107,8 +107,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: artist.spotifyId,
           name: artist.name,
           images: artist.imageUrl ? [{ url: artist.imageUrl, height: 300, width: 300 }] : [],
-          genres: artist.genres,
-          popularity: artist.popularity,
+          genres: artist.genres || [],
+          popularity: artist.popularity || 50,
           followers: {
             total: artist.monthlyListeners || 0
           },

@@ -3,14 +3,19 @@ interface GameStatusProps {
   maxAttempts: number;
   hint: string;
   showHint: boolean;
+  targetArtistName?: string; // Optional prop for development mode
 }
 
 export default function GameStatus({ 
   currentAttempt, 
   maxAttempts, 
   hint, 
-  showHint 
+  showHint,
+  targetArtistName
 }: GameStatusProps) {
+  // Check if we're in development mode
+  const isDevelopment = import.meta.env.DEV;
+
   return (
     <div className="mb-8 text-center">
       <div className="flex justify-center mb-4 gap-3">
@@ -37,6 +42,13 @@ export default function GameStatus({
       {showHint && (
         <div className="text-sm text-[#B3B3B3] mt-2 animate-fade-in">
           <p>Hint: <span>{hint}</span></p>
+        </div>
+      )}
+
+      {/* Show target artist name in development mode */}
+      {isDevelopment && targetArtistName && (
+        <div className="text-sm text-[#1DB954] mt-2 border border-[#1DB954] p-1 rounded inline-block">
+          <p>Hint: <span className="font-bold">{targetArtistName}</span></p>
         </div>
       )}
     </div>
