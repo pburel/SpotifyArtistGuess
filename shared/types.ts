@@ -34,6 +34,11 @@ export interface ArtistWithDetails {
   genres: string[];
   popularity: number;
   monthlyListeners?: number;
+  // Additional fields for enhanced UI
+  debutYear?: string;
+  members?: number;
+  gender?: string;
+  country?: string;
 }
 
 export interface GameResult {

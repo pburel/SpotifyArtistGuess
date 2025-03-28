@@ -1,6 +1,7 @@
 import { ArtistWithDetails } from "@shared/types";
 import { Button } from "@/components/ui/button";
 import { Check, X, Share2 } from "lucide-react";
+import ArtistDetails from "./artist-details";
 
 interface GameResultProps {
   isOpen: boolean;
@@ -47,22 +48,7 @@ export default function GameResult({
         </div>
         
         <div className="bg-[#121212] bg-opacity-60 rounded-lg p-4 mb-6">
-          <div className="w-32 h-32 rounded-full overflow-hidden mx-auto mb-4">
-            {targetArtist.imageUrl ? (
-              <img src={targetArtist.imageUrl} alt={targetArtist.name} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full bg-gray-700 flex items-center justify-center">
-                <span className="text-2xl font-bold">{targetArtist.name.charAt(0)}</span>
-              </div>
-            )}
-          </div>
-          <h3 className="font-bold text-xl mb-1">{targetArtist.name}</h3>
-          <p className="text-[#B3B3B3]">
-            {targetArtist.genres.length > 0 
-              ? targetArtist.genres[0] 
-              : 'Unknown genre'
-            } • {formatNumber(targetArtist.monthlyListeners || 0)} monthly listeners
-          </p>
+          <ArtistDetails artist={targetArtist} />
         </div>
         
         <div className="flex gap-4">
@@ -83,13 +69,4 @@ export default function GameResult({
       </div>
     </div>
   );
-}
-
-function formatNumber(num: number): string {
-  if (num >= 1000000) {
-    return `${(num / 1000000).toFixed(1)}M`;
-  } else if (num >= 1000) {
-    return `${(num / 1000).toFixed(1)}K`;
-  }
-  return num.toString();
 }
