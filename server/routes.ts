@@ -102,27 +102,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const localResults = await storage.searchArtistsByName(query.data);
       
       if (localResults.length > 0) {
-        // Convert local results to SpotifyArtist format for enrichment
-        const spotifyFormattedResults = localResults.map(artist => ({
+        // For search results, don't enrich with MusicBrainz data to avoid rate limiting
+        // Just convert to ArtistWithDetails format with basic info
+        const artists = localResults.map(artist => ({
           id: artist.spotifyId,
           name: artist.name,
-          images: artist.imageUrl ? [{ url: artist.imageUrl, height: 300, width: 300 }] : [],
+          imageUrl: artist.imageUrl || '',
           genres: artist.genres || [],
           popularity: artist.popularity || 50,
-          followers: {
-            total: artist.monthlyListeners || 0
-          },
-          external_urls: {
-            spotify: `https://open.spotify.com/artist/${artist.spotifyId}`
-          }
+          monthlyListeners: artist.monthlyListeners || 0,
+          // Leave optional UI fields undefined - they'll be fetched only when needed for the game
+          debutYear: undefined,
+          gender: undefined,
+          country: undefined,
+          members: undefined
         }));
         
-        // Enrich with MusicBrainz data
-        const enrichedLocalArtists = await Promise.all(
-          spotifyFormattedResults.map(artist => toArtistWithDetails(artist))
-        );
-        
-        return res.json({ success: true, artists: enrichedLocalArtists });
+        return res.json({ success: true, artists });
       }
       
       // If no results locally, try Spotify API directly
@@ -134,14 +130,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.saveArtists(artistsToSave);
       }
       
-      // Enrich with MusicBrainz data
-      const enrichedArtists = await Promise.all(
-        spotifyResults.map(artist => toArtistWithDetails(artist))
-      );
+      // For search results, don't enrich with MusicBrainz data
+      // Convert directly to simplified ArtistWithDetails format
+      const artists = spotifyResults.map(artist => ({
+        id: artist.id,
+        name: artist.name,
+        imageUrl: artist.images.length > 0 ? artist.images[0].url : '',
+        genres: artist.genres || [],
+        popularity: artist.popularity || 50,
+        monthlyListeners: artist.followers.total || 0,
+        // Leave optional UI fields undefined
+        debutYear: undefined,
+        gender: undefined,
+        country: undefined,
+        members: undefined
+      }));
       
       res.json({ 
         success: true, 
-        artists: enrichedArtists
+        artists
       });
     } catch (error: any) {
       console.error("Error searching artists:", error);
