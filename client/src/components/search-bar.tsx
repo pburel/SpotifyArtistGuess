@@ -116,25 +116,27 @@ export default function SearchBar({ onGuess, disabled = false }: SearchBarProps)
         >
           {isSearching ? (
             <div className="px-4 py-3 text-center text-gray-400">Searching...</div>
-          ) : results.length > 0 ? (
-            results.map((artist) => (
-              <div 
-                key={artist.id}
-                className="px-4 py-2 hover:bg-gray-800 cursor-pointer flex items-center"
-                onClick={() => handleSelectArtist(artist)}
-              >
-                <div className="w-8 h-8 rounded-full bg-gray-700 mr-3 overflow-hidden">
-                  {artist.imageUrl ? (
-                    <img src={artist.imageUrl} alt={artist.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-gray-600 flex items-center justify-center">
-                      <span className="text-xs">{artist.name.charAt(0)}</span>
-                    </div>
-                  )}
-                </div>
-                <span>{artist.name}</span>
-              </div>
-            ))
+          ) : results && results.length > 0 ? (
+            <ul className="p-0 m-0 list-none">
+              {results.map((artist) => (
+                <li 
+                  key={`artist-${artist.id}`}
+                  className="px-4 py-2 hover:bg-gray-800 cursor-pointer flex items-center"
+                  onClick={() => handleSelectArtist(artist)}
+                >
+                  <div className="w-8 h-8 rounded-full bg-gray-700 mr-3 overflow-hidden">
+                    {artist.imageUrl ? (
+                      <img src={artist.imageUrl} alt={artist.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-gray-600 flex items-center justify-center">
+                        <span className="text-xs">{artist.name.charAt(0)}</span>
+                      </div>
+                    )}
+                  </div>
+                  <span>{artist.name}</span>
+                </li>
+              ))}
+            </ul>
           ) : query.length > 0 ? (
             <div className="px-4 py-3 text-center text-gray-400">No artists found</div>
           ) : null}
