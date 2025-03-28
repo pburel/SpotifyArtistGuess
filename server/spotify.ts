@@ -80,28 +80,30 @@ async function spotifyApiRequest(endpoint: string, params: Record<string, string
  * Fetch top Spotify artists to populate the game database
  */
 export async function fetchTopArtists(limit: number = 50, offset: number = 0): Promise<SpotifyArtist[]> {
-  // Get several popular playlists to extract artists from
-  const playlistIds = [
-    '37i9dQZEVXbMDoHDwVN2tF', // Global Top 50
-    '37i9dQZF1DXcBWIGoYBM5M', // Today's Top Hits
-    '37i9dQZF1DX0XUsuxWHRQd', // RapCaviar
-    '37i9dQZF1DX4dyzvuaRJ0n', // mint
-    '37i9dQZF1DX10zKzsJ2jva', // Viva Latino
-  ];
-  
-  const uniqueArtists = new Map<string, SpotifyArtist>();
-  
-  for (const playlistId of playlistIds) {
-    try {
-      const playlistData = await spotifyApiRequest(`/playlists/${playlistId}`);
-      
-      for (const item of playlistData.tracks.items) {
-        if (item.track && item.track.artists) {
-          for (const artist of item.track.artists) {
+  try {
+    // Use search API to find popular artists across different genres
+    const genres = [
+      'pop', 'rock', 'hip hop', 'rap', 'electronic', 'r&b', 'country', 
+      'latin', 'indie', 'dance', 'jazz', 'classical', 'k-pop'
+    ];
+    
+    const uniqueArtists = new Map<string, SpotifyArtist>();
+    const artistsPerGenre = Math.ceil(limit / genres.length);
+    
+    // Get artists from each genre
+    for (const genre of genres) {
+      try {
+        const searchData = await spotifyApiRequest('/search', {
+          q: `genre:${genre}`,
+          type: 'artist',
+          limit: artistsPerGenre.toString(),
+          offset: '0'
+        });
+        
+        if (searchData.artists && searchData.artists.items) {
+          for (const artist of searchData.artists.items) {
             if (!uniqueArtists.has(artist.id)) {
-              // Fetch full artist details
-              const artistDetails = await spotifyApiRequest(`/artists/${artist.id}`);
-              uniqueArtists.set(artist.id, artistDetails);
+              uniqueArtists.set(artist.id, artist);
               
               // If we have enough artists, return early
               if (uniqueArtists.size >= limit) {
@@ -110,13 +112,38 @@ export async function fetchTopArtists(limit: number = 50, offset: number = 0): P
             }
           }
         }
+      } catch (error) {
+        console.error(`Error searching artists for genre ${genre}:`, error);
       }
-    } catch (error) {
-      console.error(`Error fetching playlist ${playlistId}:`, error);
     }
+    
+    // If we still don't have enough artists, try a broader search
+    if (uniqueArtists.size < limit) {
+      try {
+        const searchData = await spotifyApiRequest('/search', {
+          q: 'year:2020-2024',
+          type: 'artist',
+          limit: (limit - uniqueArtists.size).toString(),
+          offset: '0'
+        });
+        
+        if (searchData.artists && searchData.artists.items) {
+          for (const artist of searchData.artists.items) {
+            if (!uniqueArtists.has(artist.id)) {
+              uniqueArtists.set(artist.id, artist);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error searching additional artists:', error);
+      }
+    }
+    
+    return Array.from(uniqueArtists.values());
+  } catch (error) {
+    console.error('Error fetching top artists:', error);
+    return [];
   }
-  
-  return Array.from(uniqueArtists.values());
 }
 
 /**

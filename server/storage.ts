@@ -79,13 +79,29 @@ export class MemStorage implements IStorage {
       
       if (existing) {
         // Update existing artist
-        const updated: Artist = { ...existing, ...artistData };
+        const updated: Artist = { 
+          ...existing, 
+          name: artistData.name,
+          spotifyId: artistData.spotifyId,
+          imageUrl: artistData.imageUrl || null,
+          genres: artistData.genres || null,
+          popularity: artistData.popularity || null,
+          monthlyListeners: artistData.monthlyListeners || null
+        };
         this.artistsMap.set(artistData.spotifyId, updated);
         savedArtists.push(updated);
       } else {
         // Create new artist
         const id = this.currentArtistId++;
-        const newArtist: Artist = { ...artistData, id };
+        const newArtist: Artist = { 
+          id,
+          name: artistData.name,
+          spotifyId: artistData.spotifyId,
+          imageUrl: artistData.imageUrl || null,
+          genres: artistData.genres || null,
+          popularity: artistData.popularity || null,
+          monthlyListeners: artistData.monthlyListeners || null
+        };
         this.artistsMap.set(artistData.spotifyId, newArtist);
         savedArtists.push(newArtist);
       }
@@ -103,7 +119,15 @@ export class MemStorage implements IStorage {
 
   async saveGameHistory(historyData: InsertGameHistory): Promise<GameHistory> {
     const id = this.currentGameHistoryId++;
-    const history: GameHistory = { ...historyData, id };
+    const history: GameHistory = { 
+      id,
+      userId: historyData.userId ?? null,
+      targetArtistId: historyData.targetArtistId,
+      attemptsUsed: historyData.attemptsUsed,
+      isCorrect: historyData.isCorrect,
+      score: historyData.score,
+      timestamp: historyData.timestamp
+    };
     this.gameHistoryList.push(history);
     return history;
   }
