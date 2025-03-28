@@ -161,7 +161,7 @@ function GuessCard({ guess, targetArtist }: GuessCardProps) {
       
       <div className="grid grid-cols-3 gap-2 p-2">
         {/* Debut */}
-        <div className={`rounded-lg p-2 flex flex-col items-center ${guessYear === targetYear ? 'bg-green-800 bg-opacity-50' : 'bg-gray-800'}`}>
+        <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${guessYear === targetYear ? 'correct' : 'bg-gray-800'}`}>
           <span className="text-gray-400 text-xs">Debut</span>
           <div className="flex items-center">
             <span className="text-white text-lg font-semibold">{guess.debutYear || '—'}</span>
@@ -170,7 +170,7 @@ function GuessCard({ guess, targetArtist }: GuessCardProps) {
         </div>
 
         {/* Members */}
-        <div className="bg-gray-800 rounded-lg p-2 flex flex-col items-center">
+        <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${guess.members === targetArtist.members ? 'correct' : 'bg-gray-800'}`}>
           <span className="text-gray-400 text-xs">Members</span>
           <span className="text-white text-lg font-semibold">
             {guess.members ? (guess.members > 1 ? guess.members.toString() : 'Solo') : 'Solo'}
@@ -178,7 +178,7 @@ function GuessCard({ guess, targetArtist }: GuessCardProps) {
         </div>
 
         {/* Popularity */}
-        <div className={`rounded-lg p-2 flex flex-col items-center ${guessPopularity === targetPopularity ? 'bg-green-800 bg-opacity-50' : 'bg-gray-800'}`}>
+        <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${guessPopularity === targetPopularity ? 'correct' : 'bg-gray-800'}`}>
           <span className="text-gray-400 text-xs">Popularity</span>
           <div className="flex items-center">
             <span className="text-white text-lg font-semibold">{popularity}</span>
@@ -187,19 +187,19 @@ function GuessCard({ guess, targetArtist }: GuessCardProps) {
         </div>
 
         {/* Gender */}
-        <div className={`rounded-lg p-2 flex flex-col items-center ${genderMatch ? 'bg-green-800 bg-opacity-50' : 'bg-gray-800'}`}>
+        <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${genderMatch ? 'correct' : 'bg-gray-800'}`}>
           <span className="text-gray-300 text-xs">Gender</span>
           <span className="text-white text-lg font-semibold">{gender}</span>
         </div>
 
         {/* Genre */}
-        <div className="bg-gray-800 rounded-lg p-2 flex flex-col items-center">
+        <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${guess.genres?.[0] === targetArtist.genres?.[0] ? 'correct' : 'bg-gray-800'}`}>
           <span className="text-gray-400 text-xs">Genre</span>
           <span className="text-white text-lg font-semibold">{genre}</span>
         </div>
 
         {/* Country */}
-        <div className={`rounded-lg p-2 flex flex-col items-center ${countryMatch ? 'bg-green-800 bg-opacity-50' : 'bg-gray-800'}`}>
+        <div className={`rounded-lg p-2 flex flex-col items-center app-spot-guess ${countryMatch ? 'correct' : 'bg-gray-800'}`}>
           <span className="text-gray-400 text-xs">Country</span>
           <div className="flex flex-col items-center">
             {guessFlag && (
