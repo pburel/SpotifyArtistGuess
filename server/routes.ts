@@ -43,10 +43,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ success: false, message: "No artists found" });
         }
         
-        return res.json({ success: true, artist: randomArtist });
+        // Need to convert to SpotifyArtist format for toArtistWithDetails
+        const spotifyFormat = {
+          id: randomArtist.spotifyId,
+          name: randomArtist.name,
+          images: randomArtist.imageUrl ? [{ url: randomArtist.imageUrl, height: 300, width: 300 }] : [],
+          genres: randomArtist.genres || [],
+          popularity: randomArtist.popularity || 50,
+          followers: {
+            total: randomArtist.monthlyListeners || 0
+          },
+          external_urls: {
+            spotify: `https://open.spotify.com/artist/${randomArtist.spotifyId}`
+          }
+        };
+        
+        // Enrich with MusicBrainz data
+        const enrichedArtist = await toArtistWithDetails(spotifyFormat);
+        
+        return res.json({ success: true, artist: enrichedArtist });
       }
       
-      res.json({ success: true, artist });
+      // Convert to SpotifyArtist format for toArtistWithDetails
+      const spotifyFormat = {
+        id: artist.spotifyId,
+        name: artist.name,
+        images: artist.imageUrl ? [{ url: artist.imageUrl, height: 300, width: 300 }] : [],
+        genres: artist.genres || [],
+        popularity: artist.popularity || 50,
+        followers: {
+          total: artist.monthlyListeners || 0
+        },
+        external_urls: {
+          spotify: `https://open.spotify.com/artist/${artist.spotifyId}`
+        }
+      };
+      
+      // Enrich with MusicBrainz data
+      const enrichedArtist = await toArtistWithDetails(spotifyFormat);
+      
+      res.json({ success: true, artist: enrichedArtist });
     } catch (error: any) {
       console.error("Error getting random artist:", error);
       res.status(500).json({ success: false, error: error.message });
@@ -66,7 +102,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const localResults = await storage.searchArtistsByName(query.data);
       
       if (localResults.length > 0) {
-        return res.json({ success: true, artists: localResults });
+        // Convert local results to SpotifyArtist format for enrichment
+        const spotifyFormattedResults = localResults.map(artist => ({
+          id: artist.spotifyId,
+          name: artist.name,
+          images: artist.imageUrl ? [{ url: artist.imageUrl, height: 300, width: 300 }] : [],
+          genres: artist.genres,
+          popularity: artist.popularity,
+          followers: {
+            total: artist.monthlyListeners || 0
+          },
+          external_urls: {
+            spotify: `https://open.spotify.com/artist/${artist.spotifyId}`
+          }
+        }));
+        
+        // Enrich with MusicBrainz data
+        const enrichedLocalArtists = await Promise.all(
+          spotifyFormattedResults.map(artist => toArtistWithDetails(artist))
+        );
+        
+        return res.json({ success: true, artists: enrichedLocalArtists });
       }
       
       // If no results locally, try Spotify API directly
@@ -78,16 +134,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.saveArtists(artistsToSave);
       }
       
+      // Enrich with MusicBrainz data
+      const enrichedArtists = await Promise.all(
+        spotifyResults.map(artist => toArtistWithDetails(artist))
+      );
+      
       res.json({ 
         success: true, 
-        artists: spotifyResults.map(artist => ({
-          spotifyId: artist.id,
-          name: artist.name,
-          imageUrl: artist.images.length > 0 ? artist.images[0].url : undefined,
-          genres: artist.genres,
-          popularity: artist.popularity,
-          monthlyListeners: Math.floor(artist.popularity * 1000000 / 100)
-        }))
+        artists: enrichedArtists
       });
     } catch (error: any) {
       console.error("Error searching artists:", error);

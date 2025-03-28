@@ -1,5 +1,6 @@
 import { ArtistWithDetails, SpotifyArtist } from "@shared/types";
 import { InsertArtist } from "@shared/schema";
+import { getEnrichedArtistInfo, MusicBrainzArtistInfo } from "./musicbrainz";
 
 const SPOTIFY_API_BASE = "https://api.spotify.com/v1";
 let accessToken: string | null = null;
@@ -187,52 +188,121 @@ export async function searchSpotifyArtists(query: string, limit: number = 10): P
 /**
  * Convert Spotify artist to ArtistWithDetails type for the frontend
  * Enriches artist data with additional details for UI display
+ * Uses MusicBrainz data if available, falls back to generated data otherwise
  */
-export function toArtistWithDetails(artist: SpotifyArtist): ArtistWithDetails {
-  // Generate consistent but pseudo-random properties based on artist id
-  // This ensures the same artist always gets the same properties
-  const hash = artist.id.split('').reduce((acc, char) => {
-    return char.charCodeAt(0) + ((acc << 5) - acc);
-  }, 0);
-  
-  // Determine if the artist is likely a band based on name and genres
-  const isBand = artist.name.toLowerCase().includes('band') || 
-                 artist.name.includes('&') || 
-                 artist.name.includes(' and ') ||
-                 artist.genres.some(g => 
-                   g.includes('rock') || 
-                   g.includes('metal') || 
-                   g.includes('band')
-                 );
-  
-  // Generate reasonable debut year (between 1960-2020)
-  const debutYear = String(1960 + Math.abs(hash % 60));
-  
-  // Number of members (1 for solo artists, 2-6 for bands)
-  const members = isBand ? 2 + Math.abs((hash >> 3) % 5) : 1;
-  
-  // Determine gender based on artist name or use 'Group' for bands
-  let gender = 'Male';
-  if (isBand) {
-    gender = 'Group';
-  } else if (Math.abs(hash % 3) === 1) {
-    gender = 'Female'; 
+export async function toArtistWithDetails(artist: SpotifyArtist): Promise<ArtistWithDetails> {
+  try {
+    // Get MusicBrainz data
+    const musicBrainzInfo = await getEnrichedArtistInfo(artist.name);
+    
+    // Generate consistent but pseudo-random properties based on artist id
+    // This is used as fallback if MusicBrainz data is not available
+    const hash = artist.id.split('').reduce((acc, char) => {
+      return char.charCodeAt(0) + ((acc << 5) - acc);
+    }, 0);
+    
+    // Determine if the artist is likely a band based on name and genres
+    const isBand = artist.name.toLowerCase().includes('band') || 
+                   artist.name.includes('&') || 
+                   artist.name.includes(' and ') ||
+                   artist.genres.some(g => 
+                     g.includes('rock') || 
+                     g.includes('metal') || 
+                     g.includes('band')
+                   );
+    
+    // Use MusicBrainz data if available, otherwise use fallbacks
+    
+    // Debut Year
+    const debutYear = musicBrainzInfo.startYear || 
+                      String(1960 + Math.abs(hash % 60));
+    
+    // Members/Type
+    let members: number | string;
+    if (musicBrainzInfo.type === 'Group') {
+      members = 2 + Math.abs((hash >> 3) % 5); // Random band size between 2-6
+    } else if (musicBrainzInfo.type === 'Person') {
+      members = 1; // Solo artist
+    } else {
+      // Fallback to our heuristic
+      members = isBand ? 2 + Math.abs((hash >> 3) % 5) : 1;
+    }
+    
+    // Gender - Use MusicBrainz if available
+    let gender: string;
+    if (musicBrainzInfo.gender) {
+      gender = musicBrainzInfo.gender;
+    } else if (musicBrainzInfo.type === 'Group') {
+      gender = 'Group';
+    } else if (isBand) {
+      gender = 'Group';
+    } else if (Math.abs(hash % 3) === 1) {
+      gender = 'Female';
+    } else {
+      gender = 'Male';
+    }
+    
+    // Country - Use MusicBrainz if available
+    const countries = ['US', 'UK', 'CA', 'AU', 'SE', 'KR', 'JP', 'DE', 'FR', 'BR', 'ES'];
+    const country = musicBrainzInfo.country || 
+                    countries[Math.abs((hash >> 8) % countries.length)];
+    
+    // Genre - Use first genre from Spotify if available
+    const genre = artist.genres && artist.genres.length > 0 ? artist.genres[0] : 'Unknown';
+    
+    return {
+      id: artist.id,
+      name: artist.name,
+      imageUrl: artist.images.length > 0 ? artist.images[0].url : '',
+      genres: artist.genres,
+      popularity: artist.popularity,
+      monthlyListeners: Math.floor(artist.popularity * 1000000 / 100),
+      debutYear,
+      members,
+      gender,
+      country
+    };
+  } catch (error) {
+    console.error('Error enriching artist with MusicBrainz data:', error);
+    
+    // Fallback to our previous implementation if MusicBrainz fails
+    const hash = artist.id.split('').reduce((acc, char) => {
+      return char.charCodeAt(0) + ((acc << 5) - acc);
+    }, 0);
+    
+    const isBand = artist.name.toLowerCase().includes('band') || 
+                   artist.name.includes('&') || 
+                   artist.name.includes(' and ') ||
+                   artist.genres.some(g => 
+                     g.includes('rock') || 
+                     g.includes('metal') || 
+                     g.includes('band')
+                   );
+    
+    const debutYear = String(1960 + Math.abs(hash % 60));
+    const members = isBand ? 2 + Math.abs((hash >> 3) % 5) : 1;
+    
+    let gender = 'Male';
+    if (isBand) {
+      gender = 'Group';
+    } else if (Math.abs(hash % 3) === 1) {
+      gender = 'Female'; 
+    }
+    
+    const countries = ['US', 'UK', 'CA', 'AU', 'SE', 'KR', 'JP', 'DE', 'FR', 'BR', 'ES'];
+    const country = countries[Math.abs((hash >> 8) % countries.length)];
+    
+    return {
+      id: artist.id,
+      name: artist.name,
+      imageUrl: artist.images.length > 0 ? artist.images[0].url : '',
+      genres: artist.genres,
+      popularity: artist.popularity,
+      monthlyListeners: Math.floor(artist.popularity * 1000000 / 100),
+      debutYear,
+      members,
+      gender,
+      country
+    };
   }
-  
-  // Derive country from popular music countries
-  const countries = ['US', 'UK', 'CA', 'AU', 'SE', 'KR', 'JP', 'DE', 'FR', 'BR', 'ES'];
-  const country = countries[Math.abs((hash >> 8) % countries.length)];
-  
-  return {
-    id: artist.id,
-    name: artist.name,
-    imageUrl: artist.images.length > 0 ? artist.images[0].url : '',
-    genres: artist.genres,
-    popularity: artist.popularity,
-    monthlyListeners: Math.floor(artist.popularity * 1000000 / 100),
-    debutYear,
-    members: members,
-    gender,
-    country
-  };
 }
