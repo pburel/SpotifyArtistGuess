@@ -1,4 +1,3 @@
-
 import { Request, Response } from 'express';
 import querystring from 'querystring';
 
@@ -6,11 +5,11 @@ const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 const REDIRECT_URI = process.env.NODE_ENV === 'production' 
   ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co/api/auth/callback`
-  : 'http://0.0.0.0:5000/api/auth/callback';
+  : 'https://SpotifyArtistGuess.authjcreborn.repl.co/api/auth/callback';
 
 export function spotifyAuth(req: Request, res: Response) {
   const scope = 'user-read-private user-read-email playlist-read-private';
-  
+
   res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
       response_type: 'code',
@@ -22,7 +21,7 @@ export function spotifyAuth(req: Request, res: Response) {
 
 export async function spotifyCallback(req: Request, res: Response) {
   const code = req.query.code || null;
-  
+
   if (!code) {
     return res.redirect('/#error=invalid_token');
   }
@@ -42,7 +41,7 @@ export async function spotifyCallback(req: Request, res: Response) {
     });
 
     const data = await response.json();
-    
+
     // In a real app, you'd want to store this token securely
     res.redirect('/#token=' + data.access_token);
   } catch (error) {
